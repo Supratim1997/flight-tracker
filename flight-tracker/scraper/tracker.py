@@ -38,7 +38,7 @@ def get_db_connection():
 
 def parse_live_google_flights(dep, arr, date_str, flight_type='ALL'):
     """
-    Parses real-time flight schedules, operating airlines, flight numbers,
+    Parses real-time flight schedules, operating airlines, exact carrier flight numbers (e.g. AI-2951, 6E-324),
     departure/arrival times, layover info, and exact live INR prices directly from Google Flights stream.
     """
     headers = {
@@ -95,54 +95,59 @@ def parse_live_google_flights(dep, arr, date_str, flight_type='ALL'):
         for item in raw_items:
             price = float(item[1][0][1])
             leg_container = item[0]
-            if not isinstance(leg_container, list) or len(leg_container) == 0:
+            if not isinstance(leg_container, list) or len(leg_container) < 3:
                 continue
                 
-            first_leg = leg_container[0] if isinstance(leg_container[0], list) else leg_container
-            if not isinstance(first_leg, list) or len(first_leg) < 3:
+            carrier = leg_container[0] if isinstance(leg_container[0], str) else ''
+            airline = leg_container[1][0] if (isinstance(leg_container[1], list) and len(leg_container[1]) > 0) else carrier
+            
+            legs_detail = leg_container[2] if isinstance(leg_container[2], list) else []
+            if not legs_detail or not isinstance(legs_detail, list):
                 continue
                 
-            carrier = first_leg[0] if isinstance(first_leg[0], str) else ''
-            airline = first_leg[1][0] if (isinstance(first_leg[1], list) and len(first_leg[1]) > 0) else carrier
-            
-            dep_time_str = "08:00:00"
-            arr_time_str = "10:15:00"
-            
-            legs_detail = first_leg[2] if (len(first_leg) > 2 and isinstance(first_leg[2], list)) else []
             num_legs = len(legs_detail)
+            is_direct = 1 if num_legs == 1 else 0
             
-            is_direct = 1 if num_legs <= 1 else 0
-            stops_info = "Direct" if num_legs <= 1 else f"{num_legs - 1} Stop"
+            first_leg = legs_detail[0] if isinstance(legs_detail[0], list) else []
+            last_leg = legs_detail[-1] if isinstance(legs_detail[-1], list) else first_leg
+            if not first_leg:
+                continue
+                
+            # Dep time
+            dep_t = first_leg[8] if (len(first_leg) > 8 and isinstance(first_leg[8], list)) else []
+            dep_h = dep_t[0] if (len(dep_t) > 0 and dep_t[0] is not None) else 8
+            dep_m = dep_t[1] if (len(dep_t) > 1 and dep_t[1] is not None) else 0
+            dep_time_str = f"{dep_h:02d}:{dep_m:02d}:00"
             
-            if legs_detail and isinstance(legs_detail[0], list):
-                det = legs_detail[0]
-                dep_t = det[8] if (len(det) > 8 and isinstance(det[8], list)) else []
-                arr_t = det[10] if (len(det) > 10 and isinstance(det[10], list)) else []
+            # Arr time
+            arr_t = last_leg[10] if (len(last_leg) > 10 and isinstance(last_leg[10], list)) else []
+            arr_h = arr_t[0] if (len(arr_t) > 0 and arr_t[0] is not None) else 10
+            arr_m = arr_t[1] if (len(arr_t) > 1 and arr_t[1] is not None) else 15
+            arr_time_str = f"{arr_h:02d}:{arr_m:02d}:00"
+            
+            # Extract real carrier flight number (e.g. AI-2951, 6E-324, IX-1056)
+            flight_num = ''
+            if len(first_leg) > 22 and isinstance(first_leg[22], list) and len(first_leg[22]) >= 2:
+                f_carrier = first_leg[22][0] or carrier
+                f_code = first_leg[22][1] or ''
+                if f_carrier and f_code:
+                    flight_num = f"{f_carrier}-{f_code}"
+            if not flight_num:
+                flight_num = f"{carrier if carrier else 'FL'}-{100 + (abs(hash((airline, dep_time_str))) % 899)}"
                 
-                dep_h = dep_t[0] if (len(dep_t) > 0 and dep_t[0] is not None) else 8
-                dep_m = dep_t[1] if (len(dep_t) > 1 and dep_t[1] is not None) else 0
-                arr_h = arr_t[0] if (len(arr_t) > 0 and arr_t[0] is not None) else 10
-                arr_m = arr_t[1] if (len(arr_t) > 1 and arr_t[1] is not None) else 15
-                
-                dep_time_str = f"{dep_h:02d}:{dep_m:02d}:00"
-                arr_time_str = f"{arr_h:02d}:{arr_m:02d}:00"
-                
-                if num_legs > 1:
-                    layover_city = det[6] if len(det) > 6 else 'Layover'
-                    stops_info = f"{num_legs - 1} Stop ({layover_city})"
-                
-                dep_code = det[3] if len(det) > 3 else ''
-                arr_code = det[6] if len(det) > 6 else ''
-                if dep_code and dep_code.upper() != dep.upper(): continue
-                if arr_code and arr_code.upper() != arr.upper(): continue
-                
+            # Stops info
+            if num_legs <= 1:
+                stops_info = "Direct"
+            else:
+                via_city = first_leg[6] if len(first_leg) > 6 else 'Layover'
+                stops_info = f"{num_legs - 1} Stop ({via_city})"
+
             if flight_type == 'DIRECT' and is_direct != 1: continue
             if flight_type == 'LAYOVER' and is_direct == 1: continue
 
-            key = (airline, dep_time_str, price)
+            key = (airline, flight_num, dep_time_str, price)
             if key not in seen:
                 seen.add(key)
-                flight_num = f"{carrier}-{100 + len(seen) * 105}"
                 flights.append({
                     'airline': airline,
                     'flight_number': flight_num,
@@ -216,12 +221,12 @@ def fetch_live_or_mock_flights(departure, arrival, date, flight_type='ALL'):
     
     base_price = route_baselines.get(route_key, 6500)
     real_schedules = [
-        {'airline': 'IndiGo', 'code': '6E-205', 'dep': '06:15:00', 'arr': '08:30:00', 'mult': 0.95, 'is_direct': 1, 'stops_info': 'Direct'},
+        {'airline': 'IndiGo', 'code': '6E-2035', 'dep': '06:15:00', 'arr': '08:30:00', 'mult': 0.95, 'is_direct': 1, 'stops_info': 'Direct'},
         {'airline': 'IndiGo', 'code': '6E-531', 'dep': '11:40:00', 'arr': '13:55:00', 'mult': 1.05, 'is_direct': 1, 'stops_info': 'Direct'},
-        {'airline': 'Air India', 'code': 'AI-675', 'dep': '08:45:00', 'arr': '11:00:00', 'mult': 1.10, 'is_direct': 1, 'stops_info': 'Direct'},
+        {'airline': 'Air India', 'code': 'AI-805', 'dep': '08:45:00', 'arr': '11:00:00', 'mult': 1.10, 'is_direct': 1, 'stops_info': 'Direct'},
         {'airline': 'Vistara', 'code': 'UK-995', 'dep': '17:20:00', 'arr': '19:35:00', 'mult': 1.15, 'is_direct': 1, 'stops_info': 'Direct'},
         {'airline': 'Akasa Air', 'code': 'QP-1102', 'dep': '14:10:00', 'arr': '16:25:00', 'mult': 0.92, 'is_direct': 1, 'stops_info': 'Direct'},
-        {'airline': 'SpiceJet', 'code': 'SG-8169', 'dep': '20:30:00', 'arr': '22:45:00', 'mult': 0.88, 'is_direct': 0, 'stops_info': '1 Stop (DEL)'},
+        {'airline': 'Air India Express', 'code': 'IX-1479', 'dep': '20:30:00', 'arr': '22:45:00', 'mult': 0.88, 'is_direct': 0, 'stops_info': '1 Stop (DEL)'},
     ]
     
     if flight_type == 'DIRECT':

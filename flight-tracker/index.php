@@ -711,7 +711,8 @@
                     currentDepCity = json.departure_city;
                     currentArrCity = json.arrival_city;
                     
-                    renderChart(json.data, json.budget_threshold, json.preferred_date);
+                    const chartData = (json.daily_min && json.daily_min.length > 0) ? json.daily_min : json.data;
+                    renderChart(chartData, json.budget_threshold, json.preferred_date);
                     applyFiltersAndSort();
                 }
             } catch (e) {
@@ -725,7 +726,7 @@
             // 1. Filter by Airline
             const selectedAirline = document.getElementById('filterAirline')?.value || 'ALL';
             if (selectedAirline !== 'ALL') {
-                filtered = filtered.filter(d => d.airline.toLowerCase() === selectedAirline.toLowerCase());
+                filtered = filtered.filter(d => d.airline.toLowerCase().includes(selectedAirline.toLowerCase()));
             }
             
             // 2. Filter by Stops / Layover Preference
@@ -775,8 +776,6 @@
                 trendChartInstance.destroy();
             }
 
-            // Annotation for budget line requires a plugin, we'll draw it manually via dataset for simplicity, 
-            // or just rely on coloring. Let's add a horizontal dataset for the budget limit.
             const budgetLine = Array(data.length).fill(budget);
 
             trendChartInstance = new Chart(ctx, {
@@ -865,8 +864,8 @@
                 const dCity = (depCity || 'DEL').trim().toUpperCase();
                 const aCity = (arrCity || 'BOM').trim().toUpperCase();
                 
-                // 1. Google Flights Link (Explicit one-way search)
-                const googleQuery = encodeURIComponent(`one-way flights from ${dCity} to ${aCity} on ${d.flight_date} ${d.airline}`);
+                // 1. Google Flights Link (Targeting exact airline and flight number)
+                const googleQuery = encodeURIComponent(`one-way flights from ${dCity} to ${aCity} on ${d.flight_date} ${d.airline} ${d.flight_number}`);
                 const googleFlightsUrl = `https://www.google.com/travel/flights?q=${googleQuery}`;
                 
                 // 2. MakeMyTrip Link (DD/MM/YYYY format required)
@@ -876,24 +875,21 @@
                 // 3. EaseMyTrip Link
                 const emtUrl = `https://flight.easemytrip.com/FlightList/Index?srch=${dCity}-${aCity}-${mmtDate}&px=1-0-0&c=E&m=0&bType=SEARCH`;
                 
-                // 4. Skyscanner Link (YYMMDD format)
-                const skyscannerUrl = `https://www.skyscanner.co.in/transport/flights/${dCity.toLowerCase()}/${aCity.toLowerCase()}/${yy}${mm}${dd}/?adultsv2=1&cabinclass=economy`;
-                
                 const tr = document.createElement('tr');
                 tr.className = 'border-b border-slate-700/50 hover:bg-slate-800/30 transition-colors';
                 tr.innerHTML = `
                     <td class="px-4 py-3 whitespace-nowrap font-medium text-slate-200">${d.flight_date}</td>
                     <td class="px-4 py-3">
                         <div class="flex items-center gap-2">
-                            <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold text-white">
+                            <div class="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-[11px] font-bold text-indigo-300 border border-slate-600">
                                 ${d.airline.substring(0,2).toUpperCase()}
                             </div>
                             <div>
                                 <div class="flex items-center gap-1.5">
-                                    <span class="text-slate-200 font-medium">${d.airline}</span>
-                                    <span class="text-xs text-slate-500 font-mono">${d.flight_number}</span>
+                                    <span class="text-slate-100 font-semibold">${d.airline}</span>
+                                    <span class="text-xs text-indigo-300 font-mono bg-indigo-950/80 px-1.5 py-0.5 rounded border border-indigo-800/50">${d.flight_number}</span>
                                 </div>
-                                <div class="mt-0.5">
+                                <div class="mt-1">
                                     ${(d.is_direct == 1 || (d.stops_info && d.stops_info.toLowerCase().includes('direct')))
                                         ? '<span class="text-[10px] bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 px-2 py-0.5 rounded-full font-medium">Direct</span>'
                                         : `<span class="text-[10px] bg-amber-950/60 text-amber-400 border border-amber-800/40 px-2 py-0.5 rounded-full font-medium">${d.stops_info || '1 Stop'}</span>`
@@ -902,25 +898,23 @@
                             </div>
                         </div>
                     </td>
-                    <td class="px-4 py-3 text-slate-400 text-sm font-mono">
-                        ${d.departure_time.substring(0,5)} - ${d.arrival_time.substring(0,5)}
+                    <td class="px-4 py-3 text-slate-300 text-sm font-mono whitespace-nowrap">
+                        <span class="text-white font-medium">${d.departure_time.substring(0,5)}</span>
+                        <span class="text-slate-500 mx-1">→</span>
+                        <span>${d.arrival_time.substring(0,5)}</span>
                     </td>
-                    <td class="px-4 py-3 font-mono">
+                    <td class="px-4 py-3 font-mono whitespace-nowrap">
                         <div class="${priceClass} text-base font-bold">₹${parseInt(d.min_price).toLocaleString('en-IN')}</div>
-                        <div class="text-[10px] text-emerald-400 font-sans flex items-center gap-1 mt-0.5">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                            Cheapest Deal
-                        </div>
                     </td>
                     <td class="px-4 py-3 text-right whitespace-nowrap">
                         <div class="inline-flex items-center gap-1.5">
-                            <a href="${mmtUrl}" target="_blank" title="Book cheapest deal on MakeMyTrip (${dCity} -> ${aCity} on ${mmtDate})" class="inline-flex items-center gap-1 text-xs bg-emerald-600/30 hover:bg-emerald-600/70 text-emerald-300 hover:text-white border border-emerald-500/40 px-3 py-1.5 rounded-lg transition-all font-semibold shadow-sm hover:scale-105 transform">
+                            <a href="${mmtUrl}" target="_blank" title="Book flight search on MakeMyTrip (${dCity} -> ${aCity} on ${mmtDate})" class="inline-flex items-center gap-1 text-xs bg-emerald-600/30 hover:bg-emerald-600/70 text-emerald-300 hover:text-white border border-emerald-500/40 px-3 py-1.5 rounded-lg transition-all font-semibold shadow-sm hover:scale-105 transform">
                                 <span>Book on MMT</span>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>
                             </a>
-                            <a href="${googleFlightsUrl}" target="_blank" title="Verify / Book ${d.airline} on Google Flights" class="inline-flex items-center gap-1 text-xs bg-indigo-600/30 hover:bg-indigo-600/70 text-indigo-300 hover:text-white border border-indigo-500/40 px-2.5 py-1.5 rounded-lg transition-all font-medium shadow-sm hover:scale-105 transform">
+                            <a href="${googleFlightsUrl}" target="_blank" title="Verify exact flight ${d.airline} (${d.flight_number}) on Google Flights" class="inline-flex items-center gap-1 text-xs bg-indigo-600/30 hover:bg-indigo-600/70 text-indigo-300 hover:text-white border border-indigo-500/40 px-2.5 py-1.5 rounded-lg transition-all font-medium shadow-sm hover:scale-105 transform">
                                 <span>Google Flights</span>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />

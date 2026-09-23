@@ -21,25 +21,31 @@ try {
         exit;
     }
 
+    // Fetch all scraped flight options for this profile
     $stmt = $pdo->prepare("
-        SELECT ph.id, ph.flight_date, ph.price_inr as min_price, ph.airline, ph.flight_number, ph.departure_time, ph.arrival_time, ph.is_direct, ph.stops_info 
-        FROM price_history ph
-        INNER JOIN (
-            SELECT flight_date, MIN(price_inr) as lowest_price 
-            FROM price_history 
-            WHERE config_id = ? 
-            GROUP BY flight_date
-        ) min_ph ON ph.flight_date = min_ph.flight_date AND ph.price_inr = min_ph.lowest_price
-        WHERE ph.config_id = ?
-        GROUP BY ph.flight_date
-        ORDER BY ph.flight_date ASC
+        SELECT id, flight_date, price_inr as min_price, airline, flight_number, departure_time, arrival_time, is_direct, stops_info 
+        FROM price_history 
+        WHERE config_id = ?
+        ORDER BY flight_date ASC, price_inr ASC
     ");
-    $stmt->execute([$config_id, $config_id]);
+    $stmt->execute([$config_id]);
     $history = $stmt->fetchAll();
+
+    // Fetch minimum price per date for trend line chart
+    $stmtMin = $pdo->prepare("
+        SELECT flight_date, MIN(price_inr) as min_price 
+        FROM price_history 
+        WHERE config_id = ?
+        GROUP BY flight_date
+        ORDER BY flight_date ASC
+    ");
+    $stmtMin->execute([$config_id]);
+    $dailyMin = $stmtMin->fetchAll();
 
     echo json_encode([
         'success' => true, 
-        'data' => $history, 
+        'data' => $history,
+        'daily_min' => $dailyMin,
         'departure_city' => $config['departure_city'],
         'arrival_city' => $config['arrival_city'],
         'budget_threshold' => $config['budget_threshold'],
