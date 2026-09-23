@@ -115,14 +115,14 @@ def parse_live_google_flights(dep, arr, date_str, flight_type='ALL'):
                 
             # Dep time
             dep_t = first_leg[8] if (len(first_leg) > 8 and isinstance(first_leg[8], list)) else []
-            dep_h = dep_t[0] if (len(dep_t) > 0 and dep_t[0] is not None) else 8
+            dep_h = dep_t[0] if (len(dep_t) > 0 and dep_t[0] is not None) else 0
             dep_m = dep_t[1] if (len(dep_t) > 1 and dep_t[1] is not None) else 0
             dep_time_str = f"{dep_h:02d}:{dep_m:02d}:00"
             
             # Arr time
             arr_t = last_leg[10] if (len(last_leg) > 10 and isinstance(last_leg[10], list)) else []
-            arr_h = arr_t[0] if (len(arr_t) > 0 and arr_t[0] is not None) else 10
-            arr_m = arr_t[1] if (len(arr_t) > 1 and arr_t[1] is not None) else 15
+            arr_h = arr_t[0] if (len(arr_t) > 0 and arr_t[0] is not None) else 0
+            arr_m = arr_t[1] if (len(arr_t) > 1 and arr_t[1] is not None) else 0
             arr_time_str = f"{arr_h:02d}:{arr_m:02d}:00"
             
             # Extract real carrier flight number (e.g. AI-2951, 6E-324, IX-1056)
