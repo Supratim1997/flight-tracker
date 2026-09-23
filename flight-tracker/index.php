@@ -107,12 +107,20 @@
         <!-- Left Column: Config Panel -->
         <div class="lg:col-span-1 space-y-8">
             <div class="glass-panel rounded-2xl p-6">
-                <h2 class="text-xl font-semibold mb-6 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                    </svg>
-                    Tracking Configuration
-                </h2>
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                        </svg>
+                        <span id="formTitle">Tracking Configuration</span>
+                    </h2>
+                    <button type="button" onclick="resetConfigForm()" class="text-xs bg-indigo-600/30 hover:bg-indigo-600/60 text-indigo-300 border border-indigo-500/40 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        + New Route
+                    </button>
+                </div>
                 <form id="configForm" class="space-y-4" onsubmit="saveConfig(event)">
                     <input type="hidden" id="configId" name="id" value="0">
                     
@@ -385,6 +393,18 @@
         // Initialize toggle visual state
         toggleBg.classList.replace('bg-slate-700', 'bg-primary');
 
+        function resetConfigForm() {
+            document.getElementById('configId').value = '0';
+            document.getElementById('departure').value = '';
+            document.getElementById('arrival').value = '';
+            document.getElementById('prefDate').value = '';
+            document.getElementById('budget').value = '';
+            document.getElementById('activeToggle').checked = true;
+            toggleInput.dispatchEvent(new Event('change'));
+            document.getElementById('formTitle').innerText = 'New Flight Route';
+            document.getElementById('departure').focus();
+        }
+
         async function loadProfiles() {
             try {
                 const res = await fetch('api/save_config.php');
@@ -397,23 +417,34 @@
                         const div = document.createElement('div');
                         const statusColor = p.active == 1 ? 'text-green-400' : 'text-slate-500';
                         const dotColor = p.active == 1 ? 'bg-green-400' : 'bg-slate-500';
-                        div.className = `p-3 rounded-xl border border-slate-700/50 hover:border-primary/50 cursor-pointer transition-all bg-slate-800/30 flex justify-between items-center ${currentConfigId == p.id ? 'border-primary ring-1 ring-primary/30' : ''}`;
+                        const isSelected = currentConfigId == p.id;
+                        div.className = `p-3 rounded-xl border border-slate-700/50 hover:border-primary/50 cursor-pointer transition-all bg-slate-800/30 flex justify-between items-center ${isSelected ? 'border-primary ring-1 ring-primary/30 bg-slate-800/70' : ''}`;
                         div.onclick = () => {
                             currentConfigId = p.id;
                             loadProfileData(p);
                             loadTrendData(p.id);
+                            loadProfiles();
                         };
                         div.innerHTML = `
-                            <div>
-                                <div class="font-semibold text-white tracking-wider">${p.departure_city} → ${p.arrival_city}</div>
+                            <div class="flex-1">
+                                <div class="font-semibold text-white tracking-wider flex items-center gap-2">
+                                    ${p.departure_city} → ${p.arrival_city}
+                                </div>
                                 <div class="text-xs text-slate-400 mt-1">${p.preferred_date}</div>
                             </div>
-                            <div class="text-right">
-                                <div class="font-mono text-sm mb-1">₹${p.budget_threshold}</div>
-                                <div class="flex items-center justify-end gap-1 text-[10px] ${statusColor}">
-                                    <span class="w-2 h-2 rounded-full ${dotColor}"></span>
-                                    ${p.active == 1 ? 'ACTIVE' : 'PAUSED'}
+                            <div class="text-right flex items-center gap-3">
+                                <div>
+                                    <div class="font-mono text-sm mb-1">₹${p.budget_threshold}</div>
+                                    <div class="flex items-center justify-end gap-1 text-[10px] ${statusColor}">
+                                        <span class="w-2 h-2 rounded-full ${dotColor}"></span>
+                                        ${p.active == 1 ? 'ACTIVE' : 'PAUSED'}
+                                    </div>
                                 </div>
+                                <button type="button" onclick="deleteConfig(${p.id}, event)" title="Delete Route" class="text-slate-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-slate-700/50 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
                             </div>
                         `;
                         container.appendChild(div);
@@ -426,7 +457,7 @@
                         loadTrendData(json.data[0].id);
                     }
                 } else {
-                    container.innerHTML = '<div class="text-slate-500 text-sm text-center py-4">No tracking profiles yet.</div>';
+                    container.innerHTML = '<div class="text-slate-500 text-sm text-center py-4">No tracking profiles yet. Click "+ New Route" above to add one.</div>';
                 }
             } catch (e) {
                 console.error("Failed to load profiles", e);
@@ -441,9 +472,33 @@
             document.getElementById('budget').value = p.budget_threshold;
             document.getElementById('activeToggle').checked = (p.active == 1);
             toggleInput.dispatchEvent(new Event('change'));
+            document.getElementById('formTitle').innerText = `Edit Route (${p.departure_city} → ${p.arrival_city})`;
+        }
+
+        async function deleteConfig(id, e) {
+            e.stopPropagation(); // prevent card click
+            if (!confirm("Are you sure you want to delete this flight route?")) return;
             
-            // update highlighting in list
-            loadProfiles(); // quick re-render to update active styling
+            try {
+                const formData = new FormData();
+                formData.append('id', id);
+                const res = await fetch('api/delete_config.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const json = await res.json();
+                if (json.success) {
+                    if (currentConfigId == id) {
+                        currentConfigId = null;
+                        resetConfigForm();
+                    }
+                    loadProfiles();
+                } else {
+                    alert("Error deleting profile: " + json.error);
+                }
+            } catch (err) {
+                alert("Failed to delete profile");
+            }
         }
 
         async function saveConfig(e) {
