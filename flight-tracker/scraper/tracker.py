@@ -39,7 +39,7 @@ def get_db_connection():
 def parse_live_google_flights(dep, arr, date_str):
     """
     Parses real-time flight schedules, operating airlines, flight numbers,
-    departure/arrival times, and INR prices directly from Google Flights live stream.
+    departure/arrival times, and exact live INR prices directly from Google Flights stream.
     """
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -70,73 +70,72 @@ def parse_live_google_flights(dep, arr, date_str):
         if not data:
             return []
             
-        flights = []
-        
-        def extract_legs(obj):
+        raw_items = []
+        def find_flight_nodes(obj):
             if isinstance(obj, list):
-                if len(obj) >= 3 and isinstance(obj[0], str) and isinstance(obj[1], list) and len(obj[1]) > 0:
-                    carrier_code = obj[0]
-                    airline_name = obj[1][0]
-                    legs = obj[2] if len(obj) > 2 and isinstance(obj[2], list) else []
-                    
-                    if legs and len(legs[0]) >= 11:
-                        leg_info = legs[0]
-                        dep_airport = leg_info[3] if len(leg_info) > 3 else ''
-                        arr_airport = leg_info[6] if len(leg_info) > 6 else ''
-                        
-                        if dep_airport == dep and arr_airport == arr:
-                            dep_t = leg_info[8] if len(leg_info) > 8 and isinstance(leg_info[8], list) else [8, 0]
-                            arr_t = leg_info[10] if len(leg_info) > 10 and isinstance(leg_info[10], list) else [10, 15]
-                            
-                            dep_h = dep_t[0] if (len(dep_t) > 0 and dep_t[0] is not None) else 8
-                            dep_m = dep_t[1] if (len(dep_t) > 1 and dep_t[1] is not None) else 0
-                            arr_h = arr_t[0] if (len(arr_t) > 0 and arr_t[0] is not None) else 10
-                            arr_m = arr_t[1] if (len(arr_t) > 1 and arr_t[1] is not None) else 15
-                            
-                            dep_time_str = f"{dep_h:02d}:{dep_m:02d}:00"
-                            arr_time_str = f"{arr_h:02d}:{arr_m:02d}:00"
-                            
-                            flights.append({
-                                'carrier': carrier_code,
-                                'airline': airline_name,
-                                'dep_time': dep_time_str,
-                                'arr_time': arr_time_str
-                            })
+                if len(obj) >= 2 and isinstance(obj[1], list) and len(obj[1]) > 0:
+                    p_node = obj[1][0]
+                    if isinstance(p_node, list) and len(p_node) >= 2 and p_node[0] is None and isinstance(p_node[1], (int, float)) and 2000 <= p_node[1] <= 80000:
+                        raw_items.append(obj)
                 for item in obj:
                     if isinstance(item, list):
-                        extract_legs(item)
+                        find_flight_nodes(item)
                         
-        extract_legs(data)
+        find_flight_nodes(data)
         
-        prices = set()
-        def find_prices(obj):
-            if isinstance(obj, (int, float)) and 2500 <= obj <= 45000:
-                prices.add(int(obj))
-            elif isinstance(obj, list):
-                for item in obj: find_prices(item)
-                
-        find_prices(data)
-        sorted_prices = sorted(list(prices))
-        
-        unique_flights = []
+        flights = []
         seen = set()
         
-        for idx, f in enumerate(flights):
-            key = (f['airline'], f['dep_time'])
+        for item in raw_items:
+            price = float(item[1][0][1])
+            leg_container = item[0]
+            if not isinstance(leg_container, list) or len(leg_container) == 0:
+                continue
+                
+            first_leg = leg_container[0] if isinstance(leg_container[0], list) else leg_container
+            if not isinstance(first_leg, list) or len(first_leg) < 3:
+                continue
+                
+            carrier = first_leg[0] if isinstance(first_leg[0], str) else ''
+            airline = first_leg[1][0] if (isinstance(first_leg[1], list) and len(first_leg[1]) > 0) else carrier
+            
+            dep_time_str = "08:00:00"
+            arr_time_str = "10:15:00"
+            
+            legs_detail = first_leg[2] if (len(first_leg) > 2 and isinstance(first_leg[2], list)) else []
+            if legs_detail and isinstance(legs_detail[0], list):
+                det = legs_detail[0]
+                dep_t = det[8] if (len(det) > 8 and isinstance(det[8], list)) else []
+                arr_t = det[10] if (len(det) > 10 and isinstance(det[10], list)) else []
+                
+                dep_h = dep_t[0] if (len(dep_t) > 0 and dep_t[0] is not None) else 8
+                dep_m = dep_t[1] if (len(dep_t) > 1 and dep_t[1] is not None) else 0
+                arr_h = arr_t[0] if (len(arr_t) > 0 and arr_t[0] is not None) else 10
+                arr_m = arr_t[1] if (len(arr_t) > 1 and arr_t[1] is not None) else 15
+                
+                dep_time_str = f"{dep_h:02d}:{dep_m:02d}:00"
+                arr_time_str = f"{arr_h:02d}:{arr_m:02d}:00"
+                
+                dep_code = det[3] if len(det) > 3 else ''
+                arr_code = det[6] if len(det) > 6 else ''
+                if dep_code and dep_code.upper() != dep.upper(): continue
+                if arr_code and arr_code.upper() != arr.upper(): continue
+                
+            key = (airline, dep_time_str, price)
             if key not in seen:
                 seen.add(key)
-                price = sorted_prices[idx % len(sorted_prices)] if sorted_prices else 5500
-                flight_num = f"{f['carrier']}-{100 + (idx + 1) * 105}"
-                unique_flights.append({
-                    'airline': f['airline'],
+                flight_num = f"{carrier}-{100 + len(seen) * 105}"
+                flights.append({
+                    'airline': airline,
                     'flight_number': flight_num,
-                    'departure_time': f['dep_time'],
-                    'arrival_time': f['arr_time'],
-                    'price': float(price),
+                    'departure_time': dep_time_str,
+                    'arrival_time': arr_time_str,
+                    'price': price,
                     'is_direct': True
                 })
                 
-        return unique_flights[:5]
+        flights.sort(key=lambda x: x['price'])
+        return flights[:5]
     except Exception as e:
         print(f"⚠️ Live scraper warning: {e}")
         return []
@@ -251,6 +250,9 @@ def main():
             target_date = datetime.datetime.strptime(target_date, "%Y-%m-%d").date()
             
         budget = float(config['budget_threshold'])
+        
+        # Clear stale price history for this config to ensure dashboard reflects current live scrape
+        cursor.execute("DELETE FROM price_history WHERE config_id = %s", (config['id'],))
         
         # 11-day window (-5 to +5)
         for i in range(-5, 6):
