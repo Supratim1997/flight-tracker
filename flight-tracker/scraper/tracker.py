@@ -171,7 +171,7 @@ def send_alert(config, flight):
     # If SMTP credentials are configured, send an email
     if smtp_user and smtp_pass and recipient:
         try:
-            subject = f"✈️ Flight Deal Alert: {config['departure_city']} to {config['arrival_city']} for ₹{flight['price']}"
+            booking_url = f"https://www.google.com/travel/flights?q=flights+from+{config['departure_city']}+to+{config['arrival_city']}+on+{flight['flight_date']}"
             body = (
                 f"Great news!\n\n"
                 f"Flight Details:\n"
@@ -179,7 +179,8 @@ def send_alert(config, flight):
                 f"- Date: {flight['flight_date']}\n"
                 f"- Airline: {flight['airline']} ({flight['flight_number']})\n"
                 f"- Departure: {flight['departure_time']} | Arrival: {flight['arrival_time']}\n"
-                f"- Price: ₹{flight['price']} (Budget Threshold: ₹{config['budget_threshold']})\n"
+                f"- Price: ₹{flight['price']} (Budget Threshold: ₹{config['budget_threshold']})\n\n"
+                f"🔗 Book Flight on Google Flights:\n{booking_url}\n"
             )
             msg = MIMEMultipart()
             msg['From'] = smtp_user

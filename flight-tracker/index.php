@@ -204,12 +204,13 @@
                                 <th class="px-4 py-3 rounded-l-lg">Date</th>
                                 <th class="px-4 py-3">Airline</th>
                                 <th class="px-4 py-3">Time</th>
-                                <th class="px-4 py-3 rounded-r-lg">Price</th>
+                                <th class="px-4 py-3">Price</th>
+                                <th class="px-4 py-3 rounded-r-lg text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody id="summaryTableBody">
                             <tr>
-                                <td colspan="4" class="px-4 py-6 text-center text-slate-500">No data available. Run check or select profile.</td>
+                                <td colspan="5" class="px-4 py-6 text-center text-slate-500">No data available. Run check or select profile.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -566,7 +567,7 @@
                     document.getElementById('chartSubtitle').innerText = `Data for target date: ${json.preferred_date}`;
                     document.getElementById('displayBudget').innerText = `₹${json.budget_threshold}`;
                     renderChart(json.data, json.budget_threshold, json.preferred_date);
-                    renderTable(json.data, json.budget_threshold);
+                    renderTable(json.data, json.budget_threshold, json.departure_city, json.arrival_city);
                 }
             } catch (e) {
                 console.error("Failed to load trend data", e);
@@ -658,18 +659,19 @@
             });
         }
 
-        function renderTable(data, budget) {
+        function renderTable(data, budget, depCity, arrCity) {
             const tbody = document.getElementById('summaryTableBody');
             tbody.innerHTML = '';
             
             if(data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-6 text-center text-slate-500">No data available for this config. Run check.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-slate-500">No data available for this config. Run check.</td></tr>';
                 return;
             }
 
             data.forEach(d => {
                 const isUnderBudget = parseFloat(d.min_price) <= budget;
                 const priceClass = isUnderBudget ? 'text-green-400 font-bold' : 'text-slate-300';
+                const bookUrl = `https://www.google.com/travel/flights?q=flights+from+${depCity || ''}+to+${arrCity || ''}+on+${d.flight_date}`;
                 
                 const tr = document.createElement('tr');
                 tr.className = 'border-b border-slate-700/50 hover:bg-slate-800/30 transition-colors';
@@ -687,8 +689,16 @@
                     <td class="px-4 py-3 text-slate-400 text-sm">
                         ${d.departure_time.substring(0,5)} - ${d.arrival_time.substring(0,5)}
                     </td>
-                    <td class="px-4 py-3 text-right ${priceClass}">
+                    <td class="px-4 py-3 ${priceClass}">
                         ₹${parseInt(d.min_price).toLocaleString('en-IN')}
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                        <a href="${bookUrl}" target="_blank" class="inline-flex items-center gap-1.5 text-xs bg-indigo-600/30 hover:bg-indigo-600/70 text-indigo-300 hover:text-white border border-indigo-500/40 px-3 py-1.5 rounded-lg transition-all font-medium shadow-sm hover:scale-105 transform">
+                            <span>Book</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                        </a>
                     </td>
                 `;
                 tbody.appendChild(tr);

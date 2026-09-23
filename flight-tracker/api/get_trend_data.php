@@ -12,7 +12,7 @@ if ($config_id <= 0) {
 }
 
 try {
-    $stmt = $pdo->prepare("SELECT preferred_date, budget_threshold FROM search_configs WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT departure_city, arrival_city, preferred_date, budget_threshold FROM search_configs WHERE id = ?");
     $stmt->execute([$config_id]);
     $config = $stmt->fetch();
 
@@ -34,6 +34,8 @@ try {
     echo json_encode([
         'success' => true, 
         'data' => $history, 
+        'departure_city' => $config['departure_city'],
+        'arrival_city' => $config['arrival_city'],
         'budget_threshold' => $config['budget_threshold'],
         'preferred_date' => $config['preferred_date']
     ]);
