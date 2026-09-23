@@ -9,6 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $arrival = $_POST['arrival_city'] ?? '';
     $date = $_POST['preferred_date'] ?? '';
     $budget = (int)($_POST['budget_threshold'] ?? 0);
+    $flight_type = $_POST['flight_type'] ?? 'ALL';
     $active = isset($_POST['active']) ? (int)$_POST['active'] : 1;
     $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
 
@@ -19,12 +20,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         if ($id > 0) {
-            $stmt = $pdo->prepare("UPDATE search_configs SET departure_city = ?, arrival_city = ?, preferred_date = ?, budget_threshold = ?, active = ? WHERE id = ?");
-            $stmt->execute([$departure, $arrival, $date, $budget, $active, $id]);
+            $stmt = $pdo->prepare("UPDATE search_configs SET departure_city = ?, arrival_city = ?, preferred_date = ?, budget_threshold = ?, flight_type = ?, active = ? WHERE id = ?");
+            $stmt->execute([$departure, $arrival, $date, $budget, $flight_type, $active, $id]);
             echo json_encode(['success' => true, 'message' => 'Config updated']);
         } else {
-            $stmt = $pdo->prepare("INSERT INTO search_configs (departure_city, arrival_city, preferred_date, budget_threshold, active) VALUES (?, ?, ?, ?, ?)");
-            $stmt->execute([$departure, $arrival, $date, $budget, $active]);
+            $stmt = $pdo->prepare("INSERT INTO search_configs (departure_city, arrival_city, preferred_date, budget_threshold, flight_type, active) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$departure, $arrival, $date, $budget, $flight_type, $active]);
             echo json_encode(['success' => true, 'message' => 'Config saved', 'id' => $pdo->lastInsertId()]);
         }
     } catch (PDOException $e) {

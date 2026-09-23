@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS search_configs (
     arrival_city VARCHAR(10) NOT NULL,
     preferred_date DATE NOT NULL,
     budget_threshold INT NOT NULL,
+    flight_type VARCHAR(20) DEFAULT 'ALL',
     active TINYINT(1) DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -22,6 +23,7 @@ CREATE TABLE IF NOT EXISTS price_history (
     arrival_time TIME NOT NULL,
     price_inr DECIMAL(10, 2) NOT NULL,
     is_direct BOOLEAN DEFAULT TRUE,
+    stops_info VARCHAR(50) DEFAULT 'Direct',
     scraped_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (config_id) REFERENCES search_configs(id) ON DELETE CASCADE
 );

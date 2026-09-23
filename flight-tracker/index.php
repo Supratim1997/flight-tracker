@@ -165,12 +165,22 @@
                         <label class="block text-xs text-slate-400 mb-1">Preferred Date</label>
                         <input type="date" id="prefDate" name="preferred_date" required class="input-glass w-full rounded-lg px-4 py-2 [color-scheme:dark]">
                     </div>
-                    
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Budget Threshold (INR)</label>
-                        <div class="relative">
-                            <span class="absolute left-4 top-2 text-slate-400">₹</span>
-                            <input type="number" id="budget" name="budget_threshold" required class="input-glass w-full rounded-lg pl-8 pr-4 py-2" placeholder="5000">
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Budget Threshold (INR)</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-2 text-slate-400">₹</span>
+                                <input type="number" id="budget" name="budget_threshold" required class="input-glass w-full rounded-lg pl-8 pr-4 py-2" placeholder="5000">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Flight Type / Preference</label>
+                            <select id="flightType" name="flight_type" class="input-glass w-full rounded-lg px-3 py-2 text-xs bg-slate-900 border-slate-700">
+                                <option value="ALL">All Flights (Direct & Layovers)</option>
+                                <option value="DIRECT">Direct Flights Only</option>
+                                <option value="LAYOVER">Layover Flights Only</option>
+                            </select>
                         </div>
                     </div>
                     
@@ -287,6 +297,15 @@
                             <option value="Vistara">Vistara</option>
                             <option value="Akasa Air">Akasa Air</option>
                             <option value="SpiceJet">SpiceJet</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <span class="text-slate-400 font-medium">Stops:</span>
+                        <select id="filterStops" onchange="applyFiltersAndSort()" class="input-glass rounded-lg px-3 py-1.5 text-xs bg-slate-900 border-slate-700">
+                            <option value="ALL">All Results</option>
+                            <option value="DIRECT">Direct Only</option>
+                            <option value="LAYOVER">Layovers Only</option>
                         </select>
                     </div>
 
@@ -499,6 +518,7 @@
             document.getElementById('arrival').value = '';
             document.getElementById('prefDate').value = '';
             document.getElementById('budget').value = '';
+            if (document.getElementById('flightType')) document.getElementById('flightType').value = 'ALL';
             document.getElementById('activeToggle').checked = true;
             toggleInput.dispatchEvent(new Event('change'));
             document.getElementById('formTitle').innerText = 'New Flight Route';
@@ -518,6 +538,7 @@
                         const statusColor = p.active == 1 ? 'text-green-400' : 'text-slate-500';
                         const dotColor = p.active == 1 ? 'bg-green-400' : 'bg-slate-500';
                         const isSelected = currentConfigId == p.id;
+                        const typeLabel = p.flight_type == 'DIRECT' ? 'Direct Only' : (p.flight_type == 'LAYOVER' ? 'Layovers Only' : 'All Flights');
                         div.className = `p-3 rounded-xl border border-slate-700/50 hover:border-primary/50 cursor-pointer transition-all bg-slate-800/30 flex justify-between items-center ${isSelected ? 'border-primary ring-1 ring-primary/30 bg-slate-800/70' : ''}`;
                         div.onclick = () => {
                             currentConfigId = p.id;
@@ -529,6 +550,7 @@
                             <div class="flex-1">
                                 <div class="font-semibold text-white tracking-wider flex items-center gap-2">
                                     ${p.departure_city} → ${p.arrival_city}
+                                    <span class="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full font-normal">${typeLabel}</span>
                                 </div>
                                 <div class="text-xs text-slate-400 mt-1">${p.preferred_date}</div>
                             </div>
@@ -570,6 +592,7 @@
             document.getElementById('arrival').value = p.arrival_city;
             document.getElementById('prefDate').value = p.preferred_date;
             document.getElementById('budget').value = p.budget_threshold;
+            if (document.getElementById('flightType')) document.getElementById('flightType').value = p.flight_type || 'ALL';
             document.getElementById('activeToggle').checked = (p.active == 1);
             toggleInput.dispatchEvent(new Event('change'));
             document.getElementById('formTitle').innerText = `Edit Route (${p.departure_city} → ${p.arrival_city})`;
@@ -705,13 +728,21 @@
                 filtered = filtered.filter(d => d.airline.toLowerCase() === selectedAirline.toLowerCase());
             }
             
-            // 2. Filter Under Budget Only
+            // 2. Filter by Stops / Layover Preference
+            const selectedStops = document.getElementById('filterStops')?.value || 'ALL';
+            if (selectedStops === 'DIRECT') {
+                filtered = filtered.filter(d => d.is_direct == 1 || (d.stops_info && d.stops_info.toLowerCase().includes('direct')));
+            } else if (selectedStops === 'LAYOVER') {
+                filtered = filtered.filter(d => d.is_direct == 0 || (d.stops_info && !d.stops_info.toLowerCase().includes('direct')));
+            }
+
+            // 3. Filter Under Budget Only
             const underBudgetOnly = document.getElementById('filterUnderBudget')?.checked;
             if (underBudgetOnly) {
                 filtered = filtered.filter(d => parseFloat(d.min_price) <= currentBudgetThreshold);
             }
             
-            // 3. Sort
+            // 4. Sort
             const sortOption = document.getElementById('sortOption')?.value || 'price_asc';
             filtered.sort((a, b) => {
                 if (sortOption === 'price_asc') return parseFloat(a.min_price) - parseFloat(b.min_price);
@@ -857,8 +888,18 @@
                             <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold text-white">
                                 ${d.airline.substring(0,2).toUpperCase()}
                             </div>
-                            <span class="text-slate-200">${d.airline}</span>
-                            <span class="text-xs text-slate-500 ml-1 font-mono">${d.flight_number}</span>
+                            <div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-slate-200 font-medium">${d.airline}</span>
+                                    <span class="text-xs text-slate-500 font-mono">${d.flight_number}</span>
+                                </div>
+                                <div class="mt-0.5">
+                                    ${(d.is_direct == 1 || (d.stops_info && d.stops_info.toLowerCase().includes('direct')))
+                                        ? '<span class="text-[10px] bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 px-2 py-0.5 rounded-full font-medium">Direct</span>'
+                                        : `<span class="text-[10px] bg-amber-950/60 text-amber-400 border border-amber-800/40 px-2 py-0.5 rounded-full font-medium">${d.stops_info || '1 Stop'}</span>`
+                                    }
+                                </div>
+                            </div>
                         </div>
                     </td>
                     <td class="px-4 py-3 text-slate-400 text-sm font-mono">

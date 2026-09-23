@@ -36,16 +36,22 @@ def get_db_connection():
         print(f"Error connecting to MySQL: {err}")
         sys.exit(1)
 
-def parse_live_google_flights(dep, arr, date_str):
+def parse_live_google_flights(dep, arr, date_str, flight_type='ALL'):
     """
     Parses real-time flight schedules, operating airlines, flight numbers,
-    departure/arrival times, and exact live INR prices directly from Google Flights stream.
+    departure/arrival times, layover info, and exact live INR prices directly from Google Flights stream.
     """
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept-Language': 'en-IN,en;q=0.9'
     }
-    url = f"https://www.google.com/travel/flights?q=Flights+from+{dep}+to+{arr}+on+{date_str}&curr=INR"
+    stops_param = ''
+    if flight_type == 'DIRECT':
+        stops_param = '&stops=0'
+    elif flight_type == 'LAYOVER':
+        stops_param = '&stops=1'
+
+    url = f"https://www.google.com/travel/flights?q=Flights+from+{dep}+to+{arr}+on+{date_str}&curr=INR{stops_param}"
     try:
         r = requests.get(url, headers=headers, timeout=12)
         if r.status_code != 200:
@@ -103,6 +109,11 @@ def parse_live_google_flights(dep, arr, date_str):
             arr_time_str = "10:15:00"
             
             legs_detail = first_leg[2] if (len(first_leg) > 2 and isinstance(first_leg[2], list)) else []
+            num_legs = len(legs_detail)
+            
+            is_direct = 1 if num_legs <= 1 else 0
+            stops_info = "Direct" if num_legs <= 1 else f"{num_legs - 1} Stop"
+            
             if legs_detail and isinstance(legs_detail[0], list):
                 det = legs_detail[0]
                 dep_t = det[8] if (len(det) > 8 and isinstance(det[8], list)) else []
@@ -116,11 +127,18 @@ def parse_live_google_flights(dep, arr, date_str):
                 dep_time_str = f"{dep_h:02d}:{dep_m:02d}:00"
                 arr_time_str = f"{arr_h:02d}:{arr_m:02d}:00"
                 
+                if num_legs > 1:
+                    layover_city = det[6] if len(det) > 6 else 'Layover'
+                    stops_info = f"{num_legs - 1} Stop ({layover_city})"
+                
                 dep_code = det[3] if len(det) > 3 else ''
                 arr_code = det[6] if len(det) > 6 else ''
                 if dep_code and dep_code.upper() != dep.upper(): continue
                 if arr_code and arr_code.upper() != arr.upper(): continue
                 
+            if flight_type == 'DIRECT' and is_direct != 1: continue
+            if flight_type == 'LAYOVER' and is_direct == 1: continue
+
             key = (airline, dep_time_str, price)
             if key not in seen:
                 seen.add(key)
@@ -131,7 +149,8 @@ def parse_live_google_flights(dep, arr, date_str):
                     'departure_time': dep_time_str,
                     'arrival_time': arr_time_str,
                     'price': price,
-                    'is_direct': True
+                    'is_direct': is_direct,
+                    'stops_info': stops_info
                 })
                 
         flights.sort(key=lambda x: x['price'])
@@ -140,7 +159,7 @@ def parse_live_google_flights(dep, arr, date_str):
         print(f"⚠️ Live scraper warning: {e}")
         return []
 
-def fetch_live_or_mock_flights(departure, arrival, date):
+def fetch_live_or_mock_flights(departure, arrival, date, flight_type='ALL'):
     """
     Fetches real live flight prices, operating airlines, flight numbers, and departure times,
     falling back to realistic route baselines if live stream is unreachable.
@@ -163,13 +182,15 @@ def fetch_live_or_mock_flights(departure, arrival, date):
                     flight_num = flight_info.get('flight_number', '6E-101')
                     dep_time = flight_info.get('departure_token', '08:00:00')
                     price = float(f.get('price', 5000))
+                    is_dir = 1 if len(f.get('flights', [])) == 1 else 0
                     results.append({
                         'airline': airline,
                         'flight_number': flight_num,
                         'departure_time': '08:00:00',
                         'arrival_time': '10:15:00',
                         'price': price,
-                        'is_direct': len(f.get('flights', [])) == 1
+                        'is_direct': is_dir,
+                        'stops_info': 'Direct' if is_dir else '1 Stop'
                     })
                 if results:
                     return results
@@ -177,7 +198,7 @@ def fetch_live_or_mock_flights(departure, arrival, date):
             print(f"⚠️ SerpAPI error: {e}")
 
     # 2. Live Scraper from Google Flights Stream
-    live_flights = parse_live_google_flights(departure.upper(), arrival.upper(), date_str)
+    live_flights = parse_live_google_flights(departure.upper(), arrival.upper(), date_str, flight_type)
     if live_flights:
         return live_flights
 
@@ -195,18 +216,25 @@ def fetch_live_or_mock_flights(departure, arrival, date):
     
     base_price = route_baselines.get(route_key, 6500)
     real_schedules = [
-        {'airline': 'IndiGo', 'code': '6E-205', 'dep': '06:15:00', 'arr': '08:30:00', 'mult': 0.95},
-        {'airline': 'IndiGo', 'code': '6E-531', 'dep': '11:40:00', 'arr': '13:55:00', 'mult': 1.05},
-        {'airline': 'Air India', 'code': 'AI-675', 'dep': '08:45:00', 'arr': '11:00:00', 'mult': 1.10},
-        {'airline': 'Vistara', 'code': 'UK-995', 'dep': '17:20:00', 'arr': '19:35:00', 'mult': 1.15},
-        {'airline': 'Akasa Air', 'code': 'QP-1102', 'dep': '14:10:00', 'arr': '16:25:00', 'mult': 0.92},
-        {'airline': 'SpiceJet', 'code': 'SG-8169', 'dep': '20:30:00', 'arr': '22:45:00', 'mult': 0.88},
+        {'airline': 'IndiGo', 'code': '6E-205', 'dep': '06:15:00', 'arr': '08:30:00', 'mult': 0.95, 'is_direct': 1, 'stops_info': 'Direct'},
+        {'airline': 'IndiGo', 'code': '6E-531', 'dep': '11:40:00', 'arr': '13:55:00', 'mult': 1.05, 'is_direct': 1, 'stops_info': 'Direct'},
+        {'airline': 'Air India', 'code': 'AI-675', 'dep': '08:45:00', 'arr': '11:00:00', 'mult': 1.10, 'is_direct': 1, 'stops_info': 'Direct'},
+        {'airline': 'Vistara', 'code': 'UK-995', 'dep': '17:20:00', 'arr': '19:35:00', 'mult': 1.15, 'is_direct': 1, 'stops_info': 'Direct'},
+        {'airline': 'Akasa Air', 'code': 'QP-1102', 'dep': '14:10:00', 'arr': '16:25:00', 'mult': 0.92, 'is_direct': 1, 'stops_info': 'Direct'},
+        {'airline': 'SpiceJet', 'code': 'SG-8169', 'dep': '20:30:00', 'arr': '22:45:00', 'mult': 0.88, 'is_direct': 0, 'stops_info': '1 Stop (DEL)'},
     ]
     
+    if flight_type == 'DIRECT':
+        real_schedules = [s for s in real_schedules if s['is_direct'] == 1]
+    elif flight_type == 'LAYOVER':
+        real_schedules = [s for s in real_schedules if s['is_direct'] == 0]
+        if not real_schedules:
+            real_schedules = [{'airline': 'IndiGo', 'code': '6E-882', 'dep': '13:00:00', 'arr': '17:45:00', 'mult': 0.90, 'is_direct': 0, 'stops_info': '1 Stop (DEL)'}]
+
     seed_val = int(datetime.datetime.strptime(date_str, "%Y-%m-%d").timestamp()) if isinstance(date_str, str) else 100
     random.seed(seed_val + hash(route_key))
     
-    selected_schedules = random.sample(real_schedules, random.randint(2, 3))
+    selected_schedules = random.sample(real_schedules, min(len(real_schedules), random.randint(2, 3)))
     flights = []
     
     for s in selected_schedules:
@@ -219,7 +247,8 @@ def fetch_live_or_mock_flights(departure, arrival, date):
             'departure_time': s['dep'],
             'arrival_time': s['arr'],
             'price': final_price,
-            'is_direct': True
+            'is_direct': s['is_direct'],
+            'stops_info': s['stops_info']
         })
         
     random.seed()
@@ -241,7 +270,8 @@ def main():
         return
         
     for config in configs:
-        print(f"Processing config {config['id']}: {config['departure_city']} to {config['arrival_city']} (Target: {config['preferred_date']})")
+        f_type = config.get('flight_type', 'ALL') or 'ALL'
+        print(f"Processing config {config['id']}: {config['departure_city']} to {config['arrival_city']} (Target: {config['preferred_date']} | Type: {f_type})")
         print(f"Budget: {config['budget_threshold']}")
         
         target_date = config['preferred_date']
@@ -258,15 +288,15 @@ def main():
         for i in range(-5, 6):
             current_date = target_date + datetime.timedelta(days=i)
             
-            # Fetch live API or realistic route flight data
-            flights = fetch_live_or_mock_flights(config['departure_city'], config['arrival_city'], current_date)
+            # Fetch live API or realistic route flight data according to flight_type preference
+            flights = fetch_live_or_mock_flights(config['departure_city'], config['arrival_city'], current_date, f_type)
             
             for f in flights:
                 # 2. Insert into price_history
                 insert_sql = """
                     INSERT INTO price_history 
-                    (config_id, flight_date, airline, flight_number, departure_time, arrival_time, price_inr, is_direct) 
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    (config_id, flight_date, airline, flight_number, departure_time, arrival_time, price_inr, is_direct, stops_info) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
                 cursor.execute(insert_sql, (
                     config['id'], 
@@ -276,7 +306,8 @@ def main():
                     f['departure_time'], 
                     f['arrival_time'], 
                     f['price'], 
-                    f['is_direct']
+                    f['is_direct'],
+                    f.get('stops_info', 'Direct')
                 ))
                 flight_id = cursor.lastrowid
                 

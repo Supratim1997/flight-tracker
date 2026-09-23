@@ -12,7 +12,7 @@ if ($config_id <= 0) {
 }
 
 try {
-    $stmt = $pdo->prepare("SELECT departure_city, arrival_city, preferred_date, budget_threshold FROM search_configs WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT departure_city, arrival_city, preferred_date, budget_threshold, flight_type FROM search_configs WHERE id = ?");
     $stmt->execute([$config_id]);
     $config = $stmt->fetch();
 
@@ -22,11 +22,10 @@ try {
     }
 
     $stmt = $pdo->prepare("
-        SELECT flight_date, MIN(price_inr) as min_price, airline, flight_number, departure_time, arrival_time 
+        SELECT id, flight_date, price_inr as min_price, airline, flight_number, departure_time, arrival_time, is_direct, stops_info 
         FROM price_history 
-        WHERE config_id = ? AND is_direct = 1
-        GROUP BY flight_date 
-        ORDER BY flight_date ASC
+        WHERE config_id = ?
+        ORDER BY flight_date ASC, price_inr ASC
     ");
     $stmt->execute([$config_id]);
     $history = $stmt->fetchAll();
@@ -37,7 +36,8 @@ try {
         'departure_city' => $config['departure_city'],
         'arrival_city' => $config['arrival_city'],
         'budget_threshold' => $config['budget_threshold'],
-        'preferred_date' => $config['preferred_date']
+        'preferred_date' => $config['preferred_date'],
+        'flight_type' => $config['flight_type'] ?? 'ALL'
     ]);
 } catch (PDOException $e) {
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
