@@ -3,17 +3,19 @@
 header('Content-Type: application/json');
 
 $envPath = realpath(__DIR__ . '/../scraper/.env');
-if (!$envPath) {
-    // If .env doesn't exist yet, target the path where it should be created
+$exampleEnvPath = realpath(__DIR__ . '/../scraper/.env.example');
+
+if (!$envPath || !file_exists($envPath)) {
     $envPath = __DIR__ . '/../scraper/.env';
 }
 
-function parseEnvFile($filePath) {
+function parseEnvFile($filePath, $fallbackPath = null) {
+    $targetFile = file_exists($filePath) ? $filePath : $fallbackPath;
     $env = [];
-    if (!file_exists($filePath)) {
+    if (!$targetFile || !file_exists($targetFile)) {
         return $env;
     }
-    $lines = file($filePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    $lines = file($targetFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     foreach ($lines as $line) {
         $line = trim($line);
         if (empty($line) || strpos($line, '#') === 0) {
@@ -23,9 +25,10 @@ function parseEnvFile($filePath) {
             list($key, $val) = explode('=', $line, 2);
             $key = trim($key);
             $val = trim($val);
-            // Remove optional outer quotes
-            if ((str_starts_with($val, '"') && str_ends_with($val, '"')) ||
-                (str_starts_with($val, "'") && str_ends_with($val, "'"))) {
+            // Remove optional outer quotes (PHP 7 & 8 compatible)
+            $first = substr($val, 0, 1);
+            $last = substr($val, -1);
+            if (($first === '"' && $last === '"') || ($first === "'" && $last === "'")) {
                 $val = substr($val, 1, -1);
             }
             $env[$key] = $val;
@@ -70,7 +73,7 @@ function updateEnvFile($filePath, $newVars) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $envData = parseEnvFile($envPath);
+    $envData = parseEnvFile($envPath, $exampleEnvPath);
     echo json_encode([
         'success' => true,
         'data' => $envData

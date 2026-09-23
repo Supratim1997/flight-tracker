@@ -706,8 +706,7 @@
         }
 
         // Settings Modal JS Logic
-        async function openSettingsModal() {
-            document.getElementById('settingsModal').classList.remove('hidden');
+        async function loadSettings() {
             try {
                 const res = await fetch('api/env_config.php');
                 const json = await res.json();
@@ -720,6 +719,11 @@
             } catch (e) {
                 console.error("Failed to load .env settings", e);
             }
+        }
+
+        async function openSettingsModal() {
+            await loadSettings();
+            document.getElementById('settingsModal').classList.remove('hidden');
         }
 
         function closeSettingsModal() {
@@ -826,7 +830,10 @@
         }
 
         // Init
-        document.addEventListener('DOMContentLoaded', loadProfiles);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProfiles();
+            loadSettings();
+        });
 
     </script>
 </body>
