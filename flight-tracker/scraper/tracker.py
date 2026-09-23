@@ -51,7 +51,7 @@ def parse_live_google_flights(dep, arr, date_str, flight_type='ALL'):
     elif flight_type == 'LAYOVER':
         stops_param = '&stops=1'
 
-    url = f"https://www.google.com/travel/flights?q=Flights+from+{dep}+to+{arr}+on+{date_str}&curr=INR{stops_param}"
+    url = f"https://www.google.com/travel/flights?q=one-way+flights+from+{dep}+to+{arr}+on+{date_str}&curr=INR{stops_param}"
     try:
         r = requests.get(url, headers=headers, timeout=12)
         if r.status_code != 200:
@@ -360,7 +360,7 @@ def send_alert(config, flight):
     # If SMTP credentials are configured, send an email
     if smtp_user and smtp_pass and recipient:
         try:
-            booking_url = f"https://www.google.com/travel/flights?q=flights+from+{config['departure_city']}+to+{config['arrival_city']}+on+{flight['flight_date']}"
+            booking_url = f"https://www.google.com/travel/flights?q=one-way+flights+from+{config['departure_city']}+to+{config['arrival_city']}+on+{flight['flight_date']}"
             body = (
                 f"Great news!\n\n"
                 f"Flight Details:\n"

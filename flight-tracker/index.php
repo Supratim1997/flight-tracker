@@ -865,8 +865,8 @@
                 const dCity = (depCity || 'DEL').trim().toUpperCase();
                 const aCity = (arrCity || 'BOM').trim().toUpperCase();
                 
-                // 1. Google Flights Link
-                const googleQuery = encodeURIComponent(`Flights from ${dCity} to ${aCity} on ${d.flight_date} ${d.airline}`);
+                // 1. Google Flights Link (Explicit one-way search)
+                const googleQuery = encodeURIComponent(`one-way flights from ${dCity} to ${aCity} on ${d.flight_date} ${d.airline}`);
                 const googleFlightsUrl = `https://www.google.com/travel/flights?q=${googleQuery}`;
                 
                 // 2. MakeMyTrip Link (DD/MM/YYYY format required)
