@@ -86,6 +86,12 @@
             <p class="text-slate-400 text-sm mt-1">Premium Direct Flight Monitoring</p>
         </div>
         <div class="flex items-center gap-3">
+            <button onclick="openAccessLogsModal()" class="bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 px-5 py-2 rounded-full font-medium flex items-center gap-2 transition-all shadow-md hover:border-indigo-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>Access Logs</span>
+            </button>
             <button onclick="openSettingsModal()" class="bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 px-5 py-2 rounded-full font-medium flex items-center gap-2 transition-all shadow-md hover:border-indigo-500">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -337,6 +343,72 @@
         </div>
 
     </main>
+
+    <!-- Price Access Logs Modal -->
+    <div id="accessLogsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-panel max-w-5xl w-full rounded-2xl p-6 relative border border-slate-700/80 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center border-b border-slate-700/60 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Price Access & Audit Logs</h2>
+                        <p class="text-xs text-slate-400">Track exact URLs accessed during price discovery, prices received & flight IDs</p>
+                    </div>
+                </div>
+                <button onclick="closeAccessLogsModal()" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="flex items-center justify-between bg-slate-800/40 p-3 rounded-xl border border-slate-700/50 text-xs">
+                <div class="flex items-center gap-2">
+                    <span class="text-slate-400 font-medium">Filter Scope:</span>
+                    <select id="logsFilterScope" onchange="loadAccessLogs()" class="input-glass rounded-lg px-3 py-1.5 text-xs bg-slate-900 border-slate-700">
+                        <option value="current">Selected Profile Only</option>
+                        <option value="all">All Tracking Profiles</option>
+                    </select>
+                </div>
+                <button type="button" onclick="loadAccessLogs()" class="text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Refresh Logs
+                </button>
+            </div>
+
+            <div class="overflow-x-auto max-h-[500px]">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="text-[11px] text-slate-400 uppercase bg-slate-800/80 sticky top-0 backdrop-blur-md">
+                        <tr>
+                            <th class="px-4 py-3 rounded-l-lg">Time</th>
+                            <th class="px-4 py-3">Flight ID</th>
+                            <th class="px-4 py-3">Airline & Route</th>
+                            <th class="px-4 py-3">Price Received</th>
+                            <th class="px-4 py-3 rounded-r-lg text-right">Source Access Link</th>
+                        </tr>
+                    </thead>
+                    <tbody id="accessLogsTableBody">
+                        <tr>
+                            <td colspan="5" class="px-4 py-6 text-center text-slate-500">Loading access logs...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pt-4 border-t border-slate-700/60 flex justify-end">
+                <button type="button" onclick="closeAccessLogsModal()" class="px-5 py-2 rounded-lg text-sm text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Settings Modal -->
     <div id="settingsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
@@ -908,26 +980,93 @@
                     </td>
                     <td class="px-4 py-3 text-right whitespace-nowrap">
                         <div class="inline-flex items-center gap-1.5">
-                            <a href="${mmtUrl}" target="_blank" title="Book flight search on MakeMyTrip (${dCity} -> ${aCity} on ${mmtDate})" class="inline-flex items-center gap-1 text-xs bg-emerald-600/30 hover:bg-emerald-600/70 text-emerald-300 hover:text-white border border-emerald-500/40 px-3 py-1.5 rounded-lg transition-all font-semibold shadow-sm hover:scale-105 transform">
-                                <span>Book on MMT</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <!-- Primary Source Deal Link (Guarantees exact price extracted) -->
+                            <a href="${d.source_url || googleFlightsUrl}" target="_blank" title="Open exact source URL where ₹${parseInt(d.min_price).toLocaleString('en-IN')} price was extracted" class="inline-flex items-center gap-1.5 text-xs bg-indigo-600/40 hover:bg-indigo-600/80 text-indigo-200 hover:text-white border border-indigo-500/50 px-3 py-1.5 rounded-lg transition-all font-semibold shadow-md hover:scale-105 transform">
+                                <span>Book Source Deal (₹${parseInt(d.min_price).toLocaleString('en-IN')})</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>
                             </a>
-                            <a href="${googleFlightsUrl}" target="_blank" title="Verify exact flight ${d.airline} (${d.flight_number}) on Google Flights" class="inline-flex items-center gap-1 text-xs bg-indigo-600/30 hover:bg-indigo-600/70 text-indigo-300 hover:text-white border border-indigo-500/40 px-2.5 py-1.5 rounded-lg transition-all font-medium shadow-sm hover:scale-105 transform">
-                                <span>Google Flights</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                </svg>
-                            </a>
-                            <a href="${emtUrl}" target="_blank" title="Compare direct search on EaseMyTrip" class="inline-flex items-center text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 px-2.5 py-1.5 rounded-lg transition-all font-medium">
-                                EMT ↗
-                            </a>
+
+                            <!-- Others Menu for Alternative OTAs -->
+                            <div class="relative group inline-block text-left">
+                                <button type="button" class="inline-flex items-center gap-1 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 px-2.5 py-1.5 rounded-lg transition-all font-medium">
+                                    <span>Others</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                <div class="absolute right-0 mt-1 w-36 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl hidden group-hover:block z-20 py-1">
+                                    <a href="${mmtUrl}" target="_blank" class="block px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-emerald-400 font-medium">
+                                        MakeMyTrip ↗
+                                    </a>
+                                    <a href="${emtUrl}" target="_blank" class="block px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-indigo-400 font-medium">
+                                        EaseMyTrip ↗
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        // Access Logs JS Logic
+        async function openAccessLogsModal() {
+            document.getElementById('accessLogsModal').classList.remove('hidden');
+            await loadAccessLogs();
+        }
+
+        function closeAccessLogsModal() {
+            document.getElementById('accessLogsModal').classList.add('hidden');
+        }
+
+        async function loadAccessLogs() {
+            const scope = document.getElementById('logsFilterScope')?.value || 'current';
+            const configId = (scope === 'current' && currentConfigId) ? currentConfigId : 0;
+            const tbody = document.getElementById('accessLogsTableBody');
+            tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-slate-500">Loading access logs...</td></tr>';
+            
+            try {
+                const res = await fetch(`api/get_access_logs.php?config_id=${configId}`);
+                const json = await res.json();
+                tbody.innerHTML = '';
+                
+                if (json.success && json.data && json.data.length > 0) {
+                    json.data.forEach(log => {
+                        const tr = document.createElement('tr');
+                        tr.className = 'border-b border-slate-700/40 hover:bg-slate-800/30 transition-colors';
+                        
+                        const routeText = (log.departure_city && log.arrival_city) ? `${log.departure_city} → ${log.arrival_city}` : 'Route';
+                        const timeFormatted = log.accessed_at ? log.accessed_at.substring(0, 19).replace('T', ' ') : '-';
+                        
+                        tr.innerHTML = `
+                            <td class="px-4 py-2.5 font-mono text-slate-400 whitespace-nowrap">${timeFormatted}</td>
+                            <td class="px-4 py-2.5 font-mono text-indigo-300 font-bold whitespace-nowrap">${log.flight_number}</td>
+                            <td class="px-4 py-2.5">
+                                <div class="font-medium text-slate-200">${log.airline}</div>
+                                <div class="text-[10px] text-slate-500">${routeText} (${log.flight_date})</div>
+                            </td>
+                            <td class="px-4 py-2.5 font-mono font-bold text-emerald-400 whitespace-nowrap">₹${parseInt(log.price_received).toLocaleString('en-IN')}</td>
+                            <td class="px-4 py-2.5 text-right whitespace-nowrap">
+                                <a href="${log.accessed_url}" target="_blank" title="Open source URL accessed for this flight" class="inline-flex items-center gap-1 text-xs bg-indigo-600/30 hover:bg-indigo-600/70 text-indigo-300 hover:text-white border border-indigo-500/40 px-2.5 py-1 rounded-lg transition-all font-medium">
+                                    <span>Open Access Link</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    </svg>
+                                </a>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-slate-500">No access logs found. Run a manual check or select a profile.</td></tr>';
+                }
+            } catch (e) {
+                console.error("Failed to load access logs", e);
+                tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-red-400">Failed to load price access logs.</td></tr>';
+            }
         }
 
         // Settings Modal JS Logic

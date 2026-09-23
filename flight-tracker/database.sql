@@ -24,7 +24,21 @@ CREATE TABLE IF NOT EXISTS price_history (
     price_inr DECIMAL(10, 2) NOT NULL,
     is_direct BOOLEAN DEFAULT TRUE,
     stops_info VARCHAR(50) DEFAULT 'Direct',
+    source_url TEXT NULL,
     scraped_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (config_id) REFERENCES search_configs(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS price_access_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    config_id INT NOT NULL,
+    flight_number VARCHAR(50) NOT NULL,
+    flight_date DATE NOT NULL,
+    airline VARCHAR(100) NOT NULL,
+    source_name VARCHAR(100) DEFAULT 'Google Flights Stream',
+    accessed_url TEXT NOT NULL,
+    price_received DECIMAL(10, 2) NOT NULL,
+    accessed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (config_id) REFERENCES search_configs(id) ON DELETE CASCADE
 );
 

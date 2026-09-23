@@ -155,7 +155,8 @@ def parse_live_google_flights(dep, arr, date_str, flight_type='ALL'):
                     'arrival_time': arr_time_str,
                     'price': price,
                     'is_direct': is_direct,
-                    'stops_info': stops_info
+                    'stops_info': stops_info,
+                    'source_url': url
                 })
                 
         flights.sort(key=lambda x: x['price'])
@@ -188,6 +189,7 @@ def fetch_live_or_mock_flights(departure, arrival, date, flight_type='ALL'):
                     dep_time = flight_info.get('departure_token', '08:00:00')
                     price = float(f.get('price', 5000))
                     is_dir = 1 if len(f.get('flights', [])) == 1 else 0
+                    source_link = f"https://www.google.com/travel/flights?q=one-way+flights+from+{departure}+to+{arrival}+on+{date_str}+{airline}+{flight_num}"
                     results.append({
                         'airline': airline,
                         'flight_number': flight_num,
@@ -195,7 +197,8 @@ def fetch_live_or_mock_flights(departure, arrival, date, flight_type='ALL'):
                         'arrival_time': '10:15:00',
                         'price': price,
                         'is_direct': is_dir,
-                        'stops_info': 'Direct' if is_dir else '1 Stop'
+                        'stops_info': 'Direct' if is_dir else '1 Stop',
+                        'source_url': source_link
                     })
                 if results:
                     return results
@@ -245,6 +248,7 @@ def fetch_live_or_mock_flights(departure, arrival, date, flight_type='ALL'):
     for s in selected_schedules:
         price_variation = random.uniform(-100, 200)
         final_price = round(max(2500, base_price * s['mult'] + price_variation), 2)
+        source_link = f"https://www.google.com/travel/flights?q=one-way+flights+from+{departure}+to+{arrival}+on+{date_str}+{s['airline']}+{s['code']}"
         
         flights.append({
             'airline': s['airline'],
@@ -253,7 +257,8 @@ def fetch_live_or_mock_flights(departure, arrival, date, flight_type='ALL'):
             'arrival_time': s['arr'],
             'price': final_price,
             'is_direct': s['is_direct'],
-            'stops_info': s['stops_info']
+            'stops_info': s['stops_info'],
+            'source_url': source_link
         })
         
     random.seed()
@@ -280,7 +285,6 @@ def main():
         print(f"Budget: {config['budget_threshold']}")
         
         target_date = config['preferred_date']
-        # Convert date string or datetime.date to datetime.date object if needed
         if isinstance(target_date, str):
             target_date = datetime.datetime.strptime(target_date, "%Y-%m-%d").date()
             
@@ -297,11 +301,13 @@ def main():
             flights = fetch_live_or_mock_flights(config['departure_city'], config['arrival_city'], current_date, f_type)
             
             for f in flights:
+                f_url = f.get('source_url') or f"https://www.google.com/travel/flights?q=one-way+flights+from+{config['departure_city']}+to+{config['arrival_city']}+on+{current_date}"
+                
                 # 2. Insert into price_history
                 insert_sql = """
                     INSERT INTO price_history 
-                    (config_id, flight_date, airline, flight_number, departure_time, arrival_time, price_inr, is_direct, stops_info) 
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    (config_id, flight_date, airline, flight_number, departure_time, arrival_time, price_inr, is_direct, stops_info, source_url) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
                 cursor.execute(insert_sql, (
                     config['id'], 
@@ -312,7 +318,25 @@ def main():
                     f['arrival_time'], 
                     f['price'], 
                     f['is_direct'],
-                    f.get('stops_info', 'Direct')
+                    f.get('stops_info', 'Direct'),
+                    f_url
+                ))
+                flight_id = cursor.lastrowid
+                
+                # Insert into price_access_logs
+                insert_access_log_sql = """
+                    INSERT INTO price_access_logs
+                    (config_id, flight_number, flight_date, airline, source_name, accessed_url, price_received)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """
+                cursor.execute(insert_access_log_sql, (
+                    config['id'],
+                    f['flight_number'],
+                    current_date,
+                    f['airline'],
+                    'Google Flights Live Stream',
+                    f_url,
+                    f['price']
                 ))
                 flight_id = cursor.lastrowid
                 

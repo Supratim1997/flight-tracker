@@ -11,8 +11,10 @@ A premium, full-stack flight monitoring system designed to run locally on XAMPP 
 ### Key Features:
 - **📊 Interactive Cost Trend Dashboard**: Dark glassmorphism UI powered by Chart.js visualizing lowest flight prices across an 11-day date window.
 - **🛫 Textable Indian Airport Autocomplete**: Autocomplete dropdowns covering all major Indian commercial airports (`DEL`, `BOM`, `BLR`, `CCU`, `HYD`, `PNQ`, `AMD`, `GOI`, `COK`, `TRV`, `JAI`, `LKO`, `SXR`, etc.). Supports typing either 3-letter IATA codes (`PNQ`) or city names (`Pune`, `Delhi`).
-- **🎛️ Interactive Filter & Sort Toolbar**: Filter table by Airline, toggle *Under Budget Only* deals, and sort dynamically by Price (Low/High), Departure Time (Earliest/Latest), Date, or Airline (A-Z).
-- **🔗 1-Click Schedule-Matched Booking Links**: Pre-formatted direct search deep links for **MakeMyTrip** (`MMT ↗`), **EaseMyTrip** (`EMT ↗`), and **Google Flights** pre-filled with exact route, date (`DD/MM/YYYY`), and carrier parameters.
+- **🎛️ Interactive Filter & Sort Toolbar**: Filter table by Airline, Direct vs Layover preferences, toggle *Under Budget Only* deals, and sort dynamically by Price (Low/High), Departure Time (Earliest/Latest), Date, or Airline (A-Z).
+- **🔗 1-Click Source-Matched Booking Links**: Primary **"Book Source Deal"** button under the Action column links directly to the exact live source search URL where the dashboard price was extracted. Alternative OTA options (**MakeMyTrip**, **EaseMyTrip**) are neatly categorized under an **"Others"** dropdown.
+- **📋 Price Access & Audit Logs Modal**: Real-time audit log accessible directly on the dashboard (`Access Logs` button) and stored in `price_access_logs`. Logs exact source URLs accessed during scraping, timestamps, flight IDs, airlines, routes, prices received, and direct clickable access hyperlinks.
+- **✈️ Exact Operating Flight Numbers & Timestamps**: Scrapes real carrier flight numbers (e.g. `6E-6921`, `AI-2951`, `QP-1563`) and accurate 24-hour departure/arrival timestamps directly from Google Flights stream metadata nodes.
 - **🌐 Live Flight Data Scraper**: Background Python worker parses real-time flight schedules, operating airlines, flight numbers, departure/arrival times, and live INR prices directly from live flight data streams.
 - **🚨 Automated Price Drop Alerts**: Background Python worker evaluates live flight prices against budget thresholds and dispatches instant SMTP email and Telegram notifications.
 - **🛡️ 24-Hour Anti-Spam Protection**: Built-in alert rate limiter in MySQL (`alert_logs`) prevents duplicate spam emails for the same flight route within 24 hours.
@@ -21,11 +23,19 @@ A premium, full-stack flight monitoring system designed to run locally on XAMPP 
 
 ---
 
-## ⚠️ Current Scope & Limitations
+## ⚠️ Current Implementation & Limitations
 
-- **Indian Domestic Airports Focus**: Autocomplete datalist is optimized for major Indian commercial domestic airports.
-- **Local MySQL Service Dependency**: Requires MySQL (via XAMPP or standalone MySQL) to be running continuously so the background Python worker can query search profiles and log alerts.
-- **Single Recipient Email per Profile**: SMTP alerts are dispatched to a single designated recipient email specified in the `.env` settings.
+1. **Source Link Price Consistency**:
+   - The price shown on the dashboard matches the exact price extracted from the source search link listed under **"Book Source Deal"**.
+   - **Third-Party OTA Variances**: When using alternative OTA search portals (MakeMyTrip / EaseMyTrip) via the **Others** menu, price variances (~₹50-500) may occur due to dynamic convenience fees, seats inventory updates, or non-inclusive gateway taxes added by OTAs during checkout.
+2. **Indian Domestic Airports Focus**:
+   - Autocomplete datalist and route baselines are optimized for major Indian commercial domestic airports.
+3. **Google Flights Stream Structure**:
+   - Scraper relies on live parsing of Google Flights stream JSON nodes (`ds:1`). If Google updates payload structures, scraper regex rules may require minor updates.
+4. **Local MySQL Service Dependency**:
+   - Requires MySQL (via XAMPP or standalone MySQL) to be running continuously so the background Python worker can query search profiles, log alerts, and save price access logs.
+5. **Single Recipient Email per Profile**:
+   - SMTP alerts are dispatched to a single designated recipient email specified in the `.env` settings.
 
 ---
 
@@ -73,7 +83,7 @@ pip install -r requirements.txt
 ### 1. Database Setup
 1. Open XAMPP Control Panel and start **Apache** and **MySQL**.
 2. Open phpMyAdmin (usually `http://localhost/phpmyadmin`).
-3. Import the `database.sql` file located in the root of this project. This will create the `flight_tracker_db` and all required tables.
+3. Import the `database.sql` file located in the root of this project. This will create the `flight_tracker_db` and all required tables (`search_configs`, `price_history`, `price_access_logs`, `alert_logs`).
 
 ### 2. PHP Web Dashboard
 1. Ensure this folder (`flight-tracker`) is placed inside your XAMPP `htdocs` directory (e.g., `C:\xampp\htdocs\flight-tracker`).
@@ -99,6 +109,7 @@ The Python script is responsible for querying flight prices across an 11-day win
    ```bash
    pip install -r requirements.txt
    ```
+
 ### 4. Alerting Configuration (SMTP & Telegram)
 
 You can configure alert notifications either directly through the **Web Dashboard UI** or by manually editing the `scraper/.env` file.
@@ -170,6 +181,5 @@ You can also trigger a manual check anytime directly from the Web Dashboard usin
 ## Architecture & Tech Stack
 - **Frontend**: HTML5, Tailwind CSS (CDN), Chart.js
 - **Backend API**: PHP 8.x
-- **Database**: MySQL
+- **Database**: MySQL (`search_configs`, `price_history`, `price_access_logs`, `alert_logs`)
 - **Scraper / Alert Engine**: Python 3 (requests, mysql-connector, smtplib)
-

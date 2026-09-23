@@ -15,6 +15,7 @@ if ($action === 'reset_profiles') {
     try {
         $pdo->exec("SET FOREIGN_KEY_CHECKS=0;");
         $pdo->exec("TRUNCATE TABLE alert_logs;");
+        $pdo->exec("TRUNCATE TABLE price_access_logs;");
         $pdo->exec("TRUNCATE TABLE price_history;");
         $pdo->exec("TRUNCATE TABLE search_configs;");
         $pdo->exec("SET FOREIGN_KEY_CHECKS=1;");

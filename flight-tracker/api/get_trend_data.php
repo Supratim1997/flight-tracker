@@ -23,7 +23,7 @@ try {
 
     // Fetch all scraped flight options for this profile
     $stmt = $pdo->prepare("
-        SELECT id, flight_date, price_inr as min_price, airline, flight_number, departure_time, arrival_time, is_direct, stops_info 
+        SELECT id, flight_date, price_inr as min_price, airline, flight_number, departure_time, arrival_time, is_direct, stops_info, source_url 
         FROM price_history 
         WHERE config_id = ?
         ORDER BY flight_date ASC, price_inr ASC
