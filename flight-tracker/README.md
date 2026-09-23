@@ -2,11 +2,70 @@
 
 A premium, full-stack flight monitoring system designed to run locally on XAMPP with a background Python worker.
 
+---
+
+## 🚀 What the Application Does
+
+**FlightTracker** automatically monitors flight prices across an **11-day date window** ($\pm 5$ days around your preferred departure date) for specified travel routes. When flight prices drop below your set budget threshold, it immediately alerts you via **SMTP Email** and **Telegram**.
+
+### Key Features:
+- **📊 Interactive Cost Trend Dashboard**: Dark glassmorphism UI powered by Chart.js visualizing lowest flight prices across an 11-day date window.
+- **🚨 Automated Price Drop Alerts**: Background Python worker evaluates flight prices against budget thresholds and dispatches instant SMTP email notifications.
+- **🛡️ 24-Hour Anti-Spam Protection**: Built-in alert rate limiter in MySQL (`alert_logs`) prevents duplicate spam emails for the same flight route within 24 hours.
+- **⚙️ In-App Settings UI**: Configure `.env` settings (SMTP host, port, credentials, recipient email, Telegram tokens, and MySQL config) directly inside the Web UI with 1-click SMTP connection testing.
+- **⏰ Flexible Background Worker**: Runs independently via Windows Task Scheduler or cron jobs — Apache web server is only needed when using the web UI.
+
+---
+
+## ⚠️ Current Limitations
+
+- **Mock Flight Data Engine**: Currently uses a built-in mock flight data generator simulating major domestic airlines (IndiGo, Air India, Vistara, SpiceJet, Akasa Air) for demonstration and testing. Live API integration (e.g., Amadeus API or SerpAPI Google Flights) can be dropped directly into `tracker.py`.
+- **Local MySQL Service Dependency**: Requires MySQL (via XAMPP or standalone MySQL) to be running continuously so the background Python worker can query search profiles and log alerts.
+- **Single Recipient Email per Profile**: SMTP alerts are dispatched to a single designated recipient email specified in the `.env` settings.
+- **Standard IATA Airport Codes**: Routes are specified using 3-letter airport codes (e.g., `DEL`, `BOM`, `BLR`, `PNQ`).
+
+---
+
 ## Prerequisites
 - XAMPP (Apache & MySQL)
 - Python 3.8+
 
 ## Setup Instructions
+
+### 🛠️ Post-Clone Setup (Ignored Files & Environment Recreation)
+When cloning this repository, sensitive credential files and local environment directories (`.env`, `venv/`) are **intentionally excluded from Git** via `.gitignore` for security.
+
+Follow these steps to recreate them on a new machine:
+
+#### 1. Recreate Environment File (`scraper/.env`)
+The `.env` file holds your SMTP email credentials, Telegram tokens, and MySQL database info.
+- **Automatic Setup (via UI)**: Launch the dashboard in your browser (`http://localhost/flight-tracker/`), click **Settings ⚙️**, fill in your details, and click **Save Settings**. The `.env` file will be created for you automatically.
+- **Manual Setup**: Copy `.env.example` to `.env`:
+  ```bash
+  cd scraper
+  # Windows PowerShell:
+  Copy-Item .env.example .env
+  # Mac/Linux:
+  cp .env.example .env
+  ```
+
+#### 2. Recreate Python Virtual Environment (`scraper/venv/`)
+Recreate the virtual environment and install dependencies locally:
+```bash
+cd scraper
+python -m venv venv
+
+# Activate (Windows PowerShell):
+.\venv\Scripts\activate
+
+# Activate (Mac/Linux):
+source venv/bin/activate
+
+# Install dependencies:
+pip install -r requirements.txt
+```
+
+---
 
 ### 1. Database Setup
 1. Open XAMPP Control Panel and start **Apache** and **MySQL**.
