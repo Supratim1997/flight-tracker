@@ -1,0 +1,25 @@
+# Environment and sensitive credential files
+.env
+*.env
+*.env.local
+!*.env.example
+
+# Python virtual environment
+venv/
+env/
+ENV/
+flight-tracker/scraper/venv/
+
+# Python compiled cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
