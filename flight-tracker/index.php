@@ -102,6 +102,32 @@
         </div>
     </header>
 
+    <!-- Searchable Autocomplete Datalist for Indian Airports -->
+    <datalist id="indianAirports">
+        <option value="DEL">DEL - New Delhi (Indira Gandhi Intl)</option>
+        <option value="BOM">BOM - Mumbai (Chhatrapati Shivaji Maharaj Intl)</option>
+        <option value="BLR">BLR - Bengaluru (Kempegowda Intl)</option>
+        <option value="MAA">MAA - Chennai Intl</option>
+        <option value="CCU">CCU - Kolkata (Netaji Subhash Chandra Bose Intl)</option>
+        <option value="HYD">HYD - Hyderabad (Rajiv Gandhi Intl)</option>
+        <option value="PNQ">PNQ - Pune Airport</option>
+        <option value="AMD">AMD - Ahmedabad (Sardar Vallabhbhai Patel Intl)</option>
+        <option value="GOI">GOI - Goa (Dabolim Airport)</option>
+        <option value="GOX">GOX - Goa (Manohar Intl Airport, Mopa)</option>
+        <option value="COK">COK - Kochi (Cochin Intl)</option>
+        <option value="TRV">TRV - Thiruvananthapuram Intl</option>
+        <option value="JAI">JAI - Jaipur Intl</option>
+        <option value="LKO">LKO - Lucknow (Chaudhary Charan Singh Intl)</option>
+        <option value="ATQ">ATQ - Amritsar (Sri Guru Ram Dass Jee Intl)</option>
+        <option value="GAU">GAU - Guwahati (Lokpriya Gopinath Bordoloi Intl)</option>
+        <option value="IXB">IXB - Bagdogra (Siliguri)</option>
+        <option value="VNS">VNS - Varanasi (Lal Bahadur Shastri Intl)</option>
+        <option value="PAT">PAT - Patna (Jay Prakash Narayan)</option>
+        <option value="BBI">BBI - Bhubaneswar (Biju Patnaik Intl)</option>
+        <option value="IXC">IXC - Chandigarh Intl</option>
+        <option value="SXR">SXR - Srinagar (Sheikh ul-Alam Intl)</option>
+    </datalist>
+
     <main class="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         <!-- Left Column: Config Panel -->
@@ -126,12 +152,12 @@
                     
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs text-slate-400 mb-1">Departure (e.g. PNQ)</label>
-                            <input type="text" id="departure" name="departure_city" required class="input-glass w-full rounded-lg px-4 py-2 uppercase" placeholder="DEL" maxlength="3">
+                            <label class="block text-xs text-slate-400 mb-1">Departure (Indian Airport)</label>
+                            <input type="text" id="departure" name="departure_city" list="indianAirports" required class="input-glass w-full rounded-lg px-4 py-2 uppercase" placeholder="DEL, Mumbai, etc." onchange="cleanAirportInput(this)" oninput="cleanAirportInput(this)">
                         </div>
                         <div>
-                            <label class="block text-xs text-slate-400 mb-1">Arrival (e.g. BOM)</label>
-                            <input type="text" id="arrival" name="arrival_city" required class="input-glass w-full rounded-lg px-4 py-2 uppercase" placeholder="BOM" maxlength="3">
+                            <label class="block text-xs text-slate-400 mb-1">Arrival (Indian Airport)</label>
+                            <input type="text" id="arrival" name="arrival_city" list="indianAirports" required class="input-glass w-full rounded-lg px-4 py-2 uppercase" placeholder="BOM, Pune, etc." onchange="cleanAirportInput(this)" oninput="cleanAirportInput(this)">
                         </div>
                     </div>
                     
@@ -234,7 +260,42 @@
 
             <!-- Summary Table -->
             <div class="glass-panel rounded-2xl p-6">
-                <h3 class="text-lg font-semibold mb-4 text-slate-200">Flight Details (Lowest Fares)</h3>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-slate-200">Flight Details (Lowest Fares)</h3>
+                </div>
+
+                <!-- Filter & Sort Toolbar -->
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4 bg-slate-800/40 p-3 rounded-xl border border-slate-700/50 text-xs">
+                    <div class="flex items-center gap-2">
+                        <span class="text-slate-400 font-medium">Sort By:</span>
+                        <select id="sortOption" onchange="applyFiltersAndSort()" class="input-glass rounded-lg px-3 py-1.5 text-xs bg-slate-900 border-slate-700">
+                            <option value="price_asc">Price: Low to High</option>
+                            <option value="price_desc">Price: High to Low</option>
+                            <option value="time_asc">Departure: Earliest</option>
+                            <option value="time_desc">Departure: Latest</option>
+                            <option value="date_asc">Date: Earliest</option>
+                            <option value="airline_asc">Airline: A-Z</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <span class="text-slate-400 font-medium">Airline:</span>
+                        <select id="filterAirline" onchange="applyFiltersAndSort()" class="input-glass rounded-lg px-3 py-1.5 text-xs bg-slate-900 border-slate-700">
+                            <option value="ALL">All Airlines</option>
+                            <option value="IndiGo">IndiGo</option>
+                            <option value="Air India">Air India</option>
+                            <option value="Vistara">Vistara</option>
+                            <option value="Akasa Air">Akasa Air</option>
+                            <option value="SpiceJet">SpiceJet</option>
+                        </select>
+                    </div>
+
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" id="filterUnderBudget" onchange="applyFiltersAndSort()" class="rounded border-slate-700 bg-slate-900 text-primary focus:ring-primary h-4 w-4">
+                        <span class="text-slate-300 font-medium">Under Budget Only</span>
+                    </label>
+                </div>
+
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm text-slate-300">
                         <thead class="text-xs text-slate-400 uppercase bg-slate-800/50 rounded-lg">
@@ -596,6 +657,24 @@
             }
         }
 
+        let rawFlightData = [];
+        let currentBudgetThreshold = 0;
+        let currentDepCity = '';
+        let currentArrCity = '';
+
+        function cleanAirportInput(el) {
+            if (!el) return;
+            let val = el.value.trim().toUpperCase();
+            if (val.length > 3) {
+                const match = val.match(/^([A-Z]{3})/);
+                if (match) {
+                    el.value = match[1];
+                }
+            } else {
+                el.value = val;
+            }
+        }
+
         async function loadTrendData(configId) {
             try {
                 const res = await fetch('api/get_trend_data.php?config_id=' + configId);
@@ -604,12 +683,47 @@
                 if(json.success) {
                     document.getElementById('chartSubtitle').innerText = `Data for target date: ${json.preferred_date}`;
                     document.getElementById('displayBudget').innerText = `₹${json.budget_threshold}`;
+                    rawFlightData = json.data || [];
+                    currentBudgetThreshold = json.budget_threshold;
+                    currentDepCity = json.departure_city;
+                    currentArrCity = json.arrival_city;
+                    
                     renderChart(json.data, json.budget_threshold, json.preferred_date);
-                    renderTable(json.data, json.budget_threshold, json.departure_city, json.arrival_city);
+                    applyFiltersAndSort();
                 }
             } catch (e) {
                 console.error("Failed to load trend data", e);
             }
+        }
+
+        function applyFiltersAndSort() {
+            let filtered = [...rawFlightData];
+            
+            // 1. Filter by Airline
+            const selectedAirline = document.getElementById('filterAirline')?.value || 'ALL';
+            if (selectedAirline !== 'ALL') {
+                filtered = filtered.filter(d => d.airline.toLowerCase() === selectedAirline.toLowerCase());
+            }
+            
+            // 2. Filter Under Budget Only
+            const underBudgetOnly = document.getElementById('filterUnderBudget')?.checked;
+            if (underBudgetOnly) {
+                filtered = filtered.filter(d => parseFloat(d.min_price) <= currentBudgetThreshold);
+            }
+            
+            // 3. Sort
+            const sortOption = document.getElementById('sortOption')?.value || 'price_asc';
+            filtered.sort((a, b) => {
+                if (sortOption === 'price_asc') return parseFloat(a.min_price) - parseFloat(b.min_price);
+                if (sortOption === 'price_desc') return parseFloat(b.min_price) - parseFloat(a.min_price);
+                if (sortOption === 'time_asc') return a.departure_time.localeCompare(b.departure_time);
+                if (sortOption === 'time_desc') return b.departure_time.localeCompare(a.departure_time);
+                if (sortOption === 'date_asc') return a.flight_date.localeCompare(b.flight_date);
+                if (sortOption === 'airline_asc') return a.airline.localeCompare(b.airline);
+                return 0;
+            });
+            
+            renderTable(filtered, currentBudgetThreshold, currentDepCity, currentArrCity);
         }
 
         function renderChart(data, budget, targetDate) {
@@ -701,16 +815,38 @@
             const tbody = document.getElementById('summaryTableBody');
             tbody.innerHTML = '';
             
-            if(data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-slate-500">No data available for this config. Run check.</td></tr>';
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-slate-500">No flight details match the selected filters.</td></tr>';
                 return;
             }
 
             data.forEach(d => {
                 const isUnderBudget = parseFloat(d.min_price) <= budget;
                 const priceClass = isUnderBudget ? 'text-green-400 font-bold' : 'text-slate-300';
-                const googleFlightsUrl = `https://www.google.com/travel/flights?q=flights+from+${depCity || ''}+to+${arrCity || ''}+on+${d.flight_date}`;
-                const mmtUrl = `https://www.makemytrip.com/flight/search?itinerary=${depCity||''}-${arrCity||''}-${d.flight_date.replace(/-/g, '')}&tripType=O&paxType=A-1_C-0_I-0&cabinClass=E`;
+                
+                // Parse date components for target OTAs
+                const dateParts = d.flight_date.split('-');
+                const yyyy = dateParts[0];
+                const mm = dateParts[1];
+                const dd = dateParts[2];
+                const yy = yyyy.substring(2);
+                
+                const dCity = (depCity || 'DEL').trim().toUpperCase();
+                const aCity = (arrCity || 'BOM').trim().toUpperCase();
+                
+                // 1. Google Flights Link
+                const googleQuery = encodeURIComponent(`Flights from ${dCity} to ${aCity} on ${d.flight_date} ${d.airline}`);
+                const googleFlightsUrl = `https://www.google.com/travel/flights?q=${googleQuery}`;
+                
+                // 2. MakeMyTrip Link (DD/MM/YYYY format required)
+                const mmtDate = `${dd}/${mm}/${yyyy}`;
+                const mmtUrl = `https://www.makemytrip.com/flight/search?itinerary=${dCity}-${aCity}-${mmtDate}&tripType=O&paxType=A-1_C-0_I-0&intl=false&cabinClass=E`;
+                
+                // 3. EaseMyTrip Link
+                const emtUrl = `https://flight.easemytrip.com/FlightList/Index?srch=${dCity}-${aCity}-${mmtDate}&px=1-0-0&c=E&m=0&bType=SEARCH`;
+                
+                // 4. Skyscanner Link (YYMMDD format)
+                const skyscannerUrl = `https://www.skyscanner.co.in/transport/flights/${dCity.toLowerCase()}/${aCity.toLowerCase()}/${yy}${mm}${dd}/?adultsv2=1&cabinclass=economy`;
                 
                 const tr = document.createElement('tr');
                 tr.className = 'border-b border-slate-700/50 hover:bg-slate-800/30 transition-colors';
@@ -733,14 +869,17 @@
                     </td>
                     <td class="px-4 py-3 text-right whitespace-nowrap">
                         <div class="inline-flex items-center gap-1.5">
-                            <a href="${googleFlightsUrl}" target="_blank" title="Search on Google Flights" class="inline-flex items-center gap-1 text-xs bg-indigo-600/30 hover:bg-indigo-600/70 text-indigo-300 hover:text-white border border-indigo-500/40 px-2.5 py-1.5 rounded-lg transition-all font-medium shadow-sm hover:scale-105 transform">
+                            <a href="${googleFlightsUrl}" target="_blank" title="Search ${d.airline} on Google Flights" class="inline-flex items-center gap-1 text-xs bg-indigo-600/30 hover:bg-indigo-600/70 text-indigo-300 hover:text-white border border-indigo-500/40 px-2.5 py-1.5 rounded-lg transition-all font-medium shadow-sm hover:scale-105 transform">
                                 <span>Google Flights</span>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>
                             </a>
-                            <a href="${mmtUrl}" target="_blank" title="Search on MakeMyTrip" class="inline-flex items-center text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 px-2.5 py-1.5 rounded-lg transition-all font-medium">
+                            <a href="${mmtUrl}" target="_blank" title="Direct search on MakeMyTrip (${dCity} -> ${aCity} on ${mmtDate})" class="inline-flex items-center text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 px-2.5 py-1.5 rounded-lg transition-all font-medium">
                                 MMT ↗
+                            </a>
+                            <a href="${emtUrl}" target="_blank" title="Direct search on EaseMyTrip" class="inline-flex items-center text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 px-2.5 py-1.5 rounded-lg transition-all font-medium">
+                                EMT ↗
                             </a>
                         </div>
                     </td>
