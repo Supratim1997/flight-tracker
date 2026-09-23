@@ -173,6 +173,44 @@
                     <div class="text-slate-400 text-sm text-center py-4">Loading profiles...</div>
                 </div>
             </div>
+
+            <!-- System Management & Reset Tools -->
+            <div class="glass-panel rounded-2xl p-6 space-y-4">
+                <h3 class="text-lg font-semibold text-slate-200 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    System Tools & Resets
+                </h3>
+                <p class="text-xs text-slate-400">Perform administrative resets and system maintenance.</p>
+                
+                <div class="space-y-3 pt-2">
+                    <!-- Reset Profiles Button -->
+                    <button type="button" onclick="confirmResetProfiles()" class="w-full bg-red-950/40 hover:bg-red-900/60 text-red-300 border border-red-800/50 p-3 rounded-xl text-xs font-medium transition-all flex items-center justify-between group shadow-sm">
+                        <div class="flex items-center gap-2">
+                            <span class="text-base">🧹</span>
+                            <div class="text-left">
+                                <div class="font-semibold text-red-200">Reset Profiles & Clear Logs</div>
+                                <div class="text-[10px] text-red-400/80">Wipes search routes, prices & alert history</div>
+                            </div>
+                        </div>
+                        <span class="text-slate-500 group-hover:text-red-300 transition-colors">Reset ↗</span>
+                    </button>
+
+                    <!-- Reset SMTP Button -->
+                    <button type="button" onclick="confirmResetSmtp()" class="w-full bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 border border-amber-800/50 p-3 rounded-xl text-xs font-medium transition-all flex items-center justify-between group shadow-sm">
+                        <div class="flex items-center gap-2">
+                            <span class="text-base">⚙️</span>
+                            <div class="text-left">
+                                <div class="font-semibold text-amber-200">Reset SMTP Configuration</div>
+                                <div class="text-[10px] text-amber-400/80">Resets email settings in .env to defaults</div>
+                            </div>
+                        </div>
+                        <span class="text-slate-500 group-hover:text-amber-300 transition-colors">Reset ↗</span>
+                    </button>
+                </div>
+                <div id="resetStatusMsg" class="text-xs p-3 rounded-lg hidden"></div>
+            </div>
         </div>
 
         <!-- Right Column: Dashboard Visualization -->
@@ -832,6 +870,70 @@
                 }
             } catch (err) {
                 alert("Request failed to save settings");
+            }
+        }
+
+        async function confirmResetProfiles() {
+            if (!confirm("⚠️ WARNING: This will permanently delete ALL flight search routes, price history, and alert logs from the database.\n\nAre you sure you want to proceed?")) {
+                return;
+            }
+
+            const statusBox = document.getElementById('resetStatusMsg');
+            statusBox.classList.add('hidden');
+
+            try {
+                const formData = new FormData();
+                formData.append('action', 'reset_profiles');
+                const res = await fetch('api/reset_system.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const json = await res.json();
+                statusBox.classList.remove('hidden', 'bg-red-900/40', 'border-red-500/40', 'text-red-300', 'bg-green-900/40', 'border-green-500/40', 'text-green-300');
+                if (json.success) {
+                    statusBox.classList.add('bg-green-900/40', 'border', 'border-green-500/40', 'text-green-300');
+                    statusBox.innerText = "✅ " + json.message;
+                    currentConfigId = null;
+                    resetConfigForm();
+                    loadProfiles();
+                    document.getElementById('summaryTableBody').innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-slate-500">No data available. Run check or select profile.</td></tr>';
+                    if (trendChartInstance) trendChartInstance.destroy();
+                } else {
+                    statusBox.classList.add('bg-red-900/40', 'border', 'border-red-500/40', 'text-red-300');
+                    statusBox.innerText = "❌ Reset Error: " + json.error;
+                }
+            } catch (e) {
+                alert("Reset request failed");
+            }
+        }
+
+        async function confirmResetSmtp() {
+            if (!confirm("⚠️ WARNING: This will reset your SMTP credentials in .env back to default template placeholders.\n\nAre you sure you want to reset SMTP configuration?")) {
+                return;
+            }
+
+            const statusBox = document.getElementById('resetStatusMsg');
+            statusBox.classList.add('hidden');
+
+            try {
+                const formData = new FormData();
+                formData.append('action', 'reset_smtp');
+                const res = await fetch('api/reset_system.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const json = await res.json();
+                statusBox.classList.remove('hidden', 'bg-red-900/40', 'border-red-500/40', 'text-red-300', 'bg-green-900/40', 'border-green-500/40', 'text-green-300');
+                if (json.success) {
+                    statusBox.classList.add('bg-green-900/40', 'border', 'border-green-500/40', 'text-green-300');
+                    statusBox.innerText = "✅ " + json.message;
+                    loadSettings();
+                } else {
+                    statusBox.classList.add('bg-red-900/40', 'border', 'border-red-500/40', 'text-red-300');
+                    statusBox.innerText = "❌ Reset Error: " + json.error;
+                }
+            } catch (e) {
+                alert("Reset SMTP request failed");
             }
         }
 
