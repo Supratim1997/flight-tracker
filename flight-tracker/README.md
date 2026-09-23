@@ -1,185 +1,157 @@
-# FlightTracker
+# ✈️ FlightTracker: Real-Time Flight Price Monitoring System
 
-A premium, full-stack flight monitoring system designed to run locally on XAMPP with a background Python worker.
+**FlightTracker** is a beginner-friendly, full-stack flight monitoring system designed to run on any computer using **XAMPP** and **Python**.
 
----
-
-## 🚀 What the Application Does
-
-**FlightTracker** automatically monitors flight prices across an **11-day date window** ($\pm 5$ days around your preferred departure date) for specified travel routes. When flight prices drop below your set budget threshold, it immediately alerts you via **SMTP Email** and **Telegram**.
-
-### Key Features:
-- **📊 Interactive Cost Trend Dashboard**: Dark glassmorphism UI powered by Chart.js visualizing lowest flight prices across an 11-day date window.
-- **🛫 Textable Indian Airport Autocomplete**: Autocomplete dropdowns covering all major Indian commercial airports (`DEL`, `BOM`, `BLR`, `CCU`, `HYD`, `PNQ`, `AMD`, `GOI`, `COK`, `TRV`, `JAI`, `LKO`, `SXR`, etc.). Supports typing either 3-letter IATA codes (`PNQ`) or city names (`Pune`, `Delhi`).
-- **🎛️ Interactive Filter & Sort Toolbar**: Filter table by Airline, Direct vs Layover preferences, toggle *Under Budget Only* deals, and sort dynamically by Price (Low/High), Departure Time (Earliest/Latest), Date, or Airline (A-Z).
-- **🔗 1-Click Source-Matched Booking Links**: Primary **"Book Source Deal"** button under the Action column links directly to the exact live source search URL where the dashboard price was extracted. Alternative OTA options (**MakeMyTrip**, **EaseMyTrip**) are neatly categorized under an **"Others"** dropdown.
-- **📋 Price Access & Audit Logs Modal**: Real-time audit log accessible directly on the dashboard (`Access Logs` button) and stored in `price_access_logs`. Logs exact source URLs accessed during scraping, timestamps, flight IDs, airlines, routes, prices received, and direct clickable access hyperlinks.
-- **✈️ Exact Operating Flight Numbers & Timestamps**: Scrapes real carrier flight numbers (e.g. `6E-6921`, `AI-2951`, `QP-1563`) and accurate 24-hour departure/arrival timestamps directly from Google Flights stream metadata nodes.
-- **🌐 Live Flight Data Scraper**: Background Python worker parses real-time flight schedules, operating airlines, flight numbers, departure/arrival times, and live INR prices directly from live flight data streams.
-- **🚨 Automated Price Drop Alerts**: Background Python worker evaluates live flight prices against budget thresholds and dispatches instant SMTP email and Telegram notifications.
-- **🛡️ 24-Hour Anti-Spam Protection**: Built-in alert rate limiter in MySQL (`alert_logs`) prevents duplicate spam emails for the same flight route within 24 hours.
-- **⚙️ In-App Settings & System Tools**: Configure `.env` credentials with 1-click SMTP connection testing, and execute administrative resets (Clear Profiles & Alert Logs or Reset SMTP credentials) directly inside the Web UI.
-- **⏰ Flexible Background Worker**: Runs independently via Windows Task Scheduler or cron jobs — Apache web server is only needed when using the web UI.
+It monitors flight prices across an **11-day window** ($\pm 5$ days around your target travel date) for your specified routes. When prices drop below your budget threshold, it immediately alerts you via **Email** and **Telegram**.
 
 ---
 
-## ⚠️ Current Implementation & Limitations
+## 💡 How It Works (In Plain English)
 
-1. **Source Link Price Consistency**:
-   - The price shown on the dashboard matches the exact price extracted from the source search link listed under **"Book Source Deal"**.
-   - **Third-Party OTA Variances**: When using alternative OTA search portals (MakeMyTrip / EaseMyTrip) via the **Others** menu, price variances (~₹50-500) may occur due to dynamic convenience fees, seats inventory updates, or non-inclusive gateway taxes added by OTAs during checkout.
-2. **Indian Domestic Airports Focus**:
-   - Autocomplete datalist and route baselines are optimized for major Indian commercial domestic airports.
-3. **Google Flights Stream Structure**:
-   - Scraper relies on live parsing of Google Flights stream JSON nodes (`ds:1`). If Google updates payload structures, scraper regex rules may require minor updates.
-4. **Local MySQL Service Dependency**:
-   - Requires MySQL (via XAMPP or standalone MySQL) to be running continuously so the background Python worker can query search profiles, log alerts, and save price access logs.
-5. **Single Recipient Email per Profile**:
-   - SMTP alerts are dispatched to a single designated recipient email specified in the `.env` settings.
+- **The Dashboard (Web App)**: Runs locally in your web browser (via XAMPP Apache). Allows you to set up flight routes, set budget targets, view price trend graphs, filter live flight deals, and access direct booking links.
+- **The Database (MySQL)**: Stores your tracking profiles, historical prices, alert logs, and source link access history.
+- **The Scraper Engine (Python)**: Queries live flight data streams, updates prices in the database, and sends email/telegram alerts when prices drop below your budget threshold.
 
 ---
 
-## Prerequisites
-- XAMPP (Apache & MySQL)
-- Python 3.8+
+## 📋 Prerequisites (Tools You Need)
 
-## Setup Instructions
+Before starting, make sure you have these two free tools installed on your computer:
 
-### 🛠️ Post-Clone Setup (Ignored Files & Environment Recreation)
-When cloning this repository, sensitive credential files and local environment directories (`.env`, `venv/`) are **intentionally excluded from Git** via `.gitignore` for security.
-
-Follow these steps to recreate them on a new machine:
-
-#### 1. Recreate Environment File (`scraper/.env`)
-The `.env` file holds your SMTP email credentials, Telegram tokens, and MySQL database info.
-- **Automatic Setup (via UI)**: Launch the dashboard in your browser (`http://localhost/flight-tracker/`), click **Settings ⚙️**, fill in your details, and click **Save Settings**. The `.env` file will be created for you automatically.
-- **Manual Setup**: Copy `.env.example` to `.env`:
-  ```bash
-  cd scraper
-  # Windows PowerShell:
-  Copy-Item .env.example .env
-  # Mac/Linux:
-  cp .env.example .env
-  ```
-
-#### 2. Recreate Python Virtual Environment (`scraper/venv/`)
-Recreate the virtual environment and install dependencies locally:
-```bash
-cd scraper
-python -m venv venv
-
-# Activate (Windows PowerShell):
-.\venv\Scripts\activate
-
-# Activate (Mac/Linux):
-source venv/bin/activate
-
-# Install dependencies:
-pip install -r requirements.txt
-```
+1. **XAMPP** (Provides local Apache Web Server & MySQL Database):
+   - Download & Install from: [apachefriends.org](https://www.apachefriends.org/)
+2. **Python 3.8 or higher**:
+   - Download & Install from: [python.org](https://www.python.org/)
+   - ⚠️ **IMPORTANT during installation**: Check the box that says **"Add Python to PATH"**.
 
 ---
 
-### 1. Database Setup
-1. Open XAMPP Control Panel and start **Apache** and **MySQL**.
-2. Open phpMyAdmin (usually `http://localhost/phpmyadmin`).
-3. Import the `database.sql` file located in the root of this project. This will create the `flight_tracker_db` and all required tables (`search_configs`, `price_history`, `price_access_logs`, `alert_logs`).
+## 🚀 Step-by-Step Setup Guide (For Beginners)
 
-### 2. PHP Web Dashboard
-1. Ensure this folder (`flight-tracker`) is placed inside your XAMPP `htdocs` directory (e.g., `C:\xampp\htdocs\flight-tracker`).
-2. Verify `config.php` has the correct database credentials (defaults to `root` with no password).
-3. Access the dashboard in your browser: `http://localhost/flight-tracker/`
+### Step 1: Copy Project Files to XAMPP Web Directory
+Place this `flight-tracker` project folder inside your XAMPP `htdocs` directory:
+- **Windows default path**: `C:\xampp\htdocs\flight-tracker`
+- **Mac default path**: `/Applications/XAMPP/htdocs/flight-tracker`
 
-### 3. Python Background Scraper
-The Python script is responsible for querying flight prices across an 11-day window around your target dates and sending alerts.
+---
 
-1. Navigate to the scraper directory:
+### Step 2: Start Apache and MySQL in XAMPP
+1. Open the **XAMPP Control Panel**.
+2. Click **Start** next to **Apache**.
+3. Click **Start** next to **MySQL**.
+*(Both module indicators should turn green).*
+
+---
+
+### Step 3: Set Up the Database
+1. Open your web browser and go to: `http://localhost/phpmyadmin`
+2. Click on **Import** in the top menu.
+3. Click **Choose File** and select `database.sql` located inside the `flight-tracker` project folder.
+4. Scroll to the bottom and click **Import** (or **Go**).
+*(This automatically creates the `flight_tracker_db` database and all required tables: `search_configs`, `price_history`, `price_access_logs`, and `alert_logs`).*
+
+---
+
+### Step 4: Set Up the Python Scraper Engine
+1. Open your terminal or command prompt (Command Prompt / PowerShell on Windows, Terminal on Mac).
+2. Navigate to the `scraper` folder inside the project directory:
    ```bash
-   cd scraper
+   cd C:\xampp\htdocs\flight-tracker\scraper
    ```
-2. Create and activate a virtual environment (optional but recommended):
+3. (Optional but recommended) Create and activate a Python virtual environment:
    ```bash
+   # Create virtual environment:
    python -m venv venv
-   # Windows:
-   venv\Scripts\activate
-   # Mac/Linux:
+
+   # Activate on Windows:
+   .\venv\Scripts\activate
+
+   # Activate on Mac/Linux:
    source venv/bin/activate
    ```
-3. Install dependencies:
+4. Install required Python packages:
    ```bash
    pip install -r requirements.txt
    ```
 
-### 4. Alerting Configuration (SMTP & Telegram)
-
-You can configure alert notifications either directly through the **Web Dashboard UI** or by manually editing the `scraper/.env` file.
-
 ---
 
-#### Option A: Via Web Dashboard UI (Recommended)
-
-1. Open your browser to `http://localhost/flight-tracker/`.
+### Step 5: Configure Email & Alert Settings
+1. Open your browser to: `http://localhost/flight-tracker/`
 2. Click the **Settings ⚙️** button in the top header.
-3. **SMTP Email Setup**:
-   - Select the **📧 SMTP Email** tab.
-   - Click the preset button (**Gmail** or **Outlook**) or enter your custom SMTP host/port.
-   - Enter your **SMTP Username** and **16-Character App Password**.
+3. Under the **📧 SMTP Email** tab:
+   - Click a provider preset button (**Gmail** or **Outlook**).
+   - Enter your **Sender Email** and **App Password**. *(For Gmail, generate a 16-character App Password at [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)).*
    - Enter your **Alert Recipient Email**.
-   - Click **Test SMTP Connection** to send an instant test email and confirm setup.
-   - Click **Save Settings**.
-4. **Telegram Setup**:
-   - Select the **📱 Telegram Alerts** tab.
-   - Enter your `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`.
+   - Click **Test SMTP Connection** to verify your email setup.
    - Click **Save Settings**.
 
 ---
 
-#### Option B: Manual `.env` File Setup
+## 🔍 How to Test the "Run Manual Check" Button
 
-Copy `scraper/.env.example` to `scraper/.env` and populate your credentials:
-
-```ini
-# Alerting Config (SMTP)
-SMTP_SERVER=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your_email@gmail.com
-SMTP_PASS=your_16_character_app_password
-ALERT_RECIPIENT=recipient_email@example.com
-
-# Alerting Config (Telegram)
-TELEGRAM_BOT_TOKEN=your_telegram_bot_token
-TELEGRAM_CHAT_ID=your_telegram_chat_id
-```
-
-##### 📧 Step-by-Step Gmail SMTP Guide:
-1. Go to your **[Google Account Security Page](https://myaccount.google.com/security)** and ensure **2-Step Verification** is turned **ON**.
-2. Visit **[Google App Passwords](https://myaccount.google.com/apppasswords)**.
-3. Generate a new App Password named `FlightTracker`.
-4. Copy the **16-character password** (remove any spaces) and paste it into `SMTP_PASS`.
-
-##### 📱 Step-by-Step Telegram Bot Setup Guide:
-1. Open Telegram and search for **`@BotFather`**.
-2. Send `/newbot` and follow the prompts to create your bot. Copy the HTTP API token provided (`TELEGRAM_BOT_TOKEN`).
-3. Search for **`@userinfobot`** in Telegram and send `/start` to retrieve your numeric `chat_id` (`TELEGRAM_CHAT_ID`).
-4. (Optional) Send a message to your newly created bot to start the chat session.
+1. Open `http://localhost/flight-tracker/` in your web browser.
+2. In the left panel (**Tracking Configuration**), fill in a flight route:
+   - **Departure**: `DEL` (New Delhi)
+   - **Arrival**: `BOM` (Mumbai)
+   - **Preferred Date**: Select a date (e.g., 2-3 weeks in the future)
+   - **Budget Threshold**: `6000`
+   - **Flight Type**: `All Flights (Direct & Layovers)`
+   - Click **Save Profile**.
+3. Now, click the **Run Manual Check** button in the top-right header:
+   - The button text will change to **"Running Check..."**.
+   - The Python background worker will run in the background, querying live stream data for your target route across an 11-day window ($\pm 5$ days).
+   - Once scraping finishes, the button reverts back to **"Run Manual Check"**.
+   - The **Cost Trend Analysis Chart** and **Flight Details Table** will automatically refresh to display the latest prices.
 
 ---
 
-### 5. Automated Scheduling (Windows Task Scheduler)
-To run the scraper automatically in the background every 12 hours:
-1. Open **Task Scheduler**.
-2. Click **Create Task**.
-3. Name it `FlightTracker Scraper`.
-4. Under **Triggers**, add a new trigger to run Daily, and check "Repeat task every: 12 hours".
-5. Under **Actions**, set:
-   - **Program/script**: Path to your python executable (e.g., `C:\path\to\flight-tracker\scraper\venv\Scripts\python.exe`)
-   - **Add arguments**: `tracker.py`
-   - **Start in**: `C:\path\to\flight-tracker\scraper\`
+## ✅ How to Validate if the Application Is Working Properly
 
-You can also trigger a manual check anytime directly from the Web Dashboard using the **Run Manual Check** button.
+Follow this checklist to confirm everything is running 100% correctly:
 
-## Architecture & Tech Stack
-- **Frontend**: HTML5, Tailwind CSS (CDN), Chart.js
+### Validation Checklist:
+- [ ] **1. Active Profiles List**: Your saved flight profile (e.g. `DEL → BOM`) appears in the left panel under **Active Profiles** with a green **ACTIVE** status dot.
+- [ ] **2. Cost Trend Analysis Chart**: The interactive line graph displays price data points across the 11-day window, with a dashed red line marking your budget threshold.
+- [ ] **3. Real Flight Numbers & Schedules**: The **Flight Details Table** shows real airline names (IndiGo, Air India, Akasa Air, SpiceJet), exact flight numbers (e.g., `6E-6921`, `AI-2951`, `QP-1563`), accurate departure/arrival times, and color-coded stops badges (*Direct* vs *1 Stop*).
+- [ ] **4. Book Source Deal Link (Exact Price Match)**: Click the **"Book Source Deal (₹Price)"** button for any flight row. It opens the exact live source search page in a new browser tab where the exact price displayed on the dashboard is shown.
+- [ ] **5. Other OTAs Menu**: Hover over the **"Others"** dropdown button next to any flight row to access direct search links for MakeMyTrip (`MMT ↗`) and EaseMyTrip (`EMT ↗`).
+- [ ] **6. Price Access & Audit Logs**: Click the **"Access Logs"** button in the top header. A pop-up audit log table will appear showing:
+  - Timestamp of scrape execution.
+  - Operating Flight ID.
+  - Airline, Route, and Target Date.
+  - Exact Price Received.
+  - Clickable **"Open Access Link ↗"** hyperlink to open the exact URL accessed during price discovery.
+- [ ] **7. Email Notifications**: If the scraped price is at or below your set budget threshold, check your recipient email inbox for an automated alert containing full flight details and booking link.
+
+---
+
+## 🛠️ Troubleshooting & Frequently Asked Questions
+
+### 1. "XAMPP Apache or MySQL won't start!"
+- **Cause**: Port 80 (Apache) or Port 3306 (MySQL) might be in use by another application (like Skype or IIS).
+- **Fix**: In XAMPP Control Panel, click **Config -> Service & Port Settings** and change Apache port to `8080`. You can then access the app at `http://localhost:8080/flight-tracker/`.
+
+### 2. "Run Manual Check button shows an error or doesn't update data."
+- **Cause**: Python is missing required packages or MySQL password credentials differ.
+- **Fix**: Open command prompt, navigate to `C:\xampp\htdocs\flight-tracker\scraper`, and run `python tracker.py` manually to view detailed log messages.
+
+### 3. "The price on MakeMyTrip (MMT) differs slightly from the dashboard."
+- **Explanation**: The dashboard price is extracted directly from the live flight stream (accessible via **"Book Source Deal"**). Third-party OTAs (like MakeMyTrip or EaseMyTrip) may display minor price variances ($\pm$ ₹50-500) due to dynamic convenience fees, seat inventory changes, or payment gateway taxes added during checkout.
+
+---
+
+## ⚠️ Scope & System Limitations
+
+1. **Domestic Flight Focus**: Autocomplete airport listings and baselines are optimized for major Indian commercial domestic airports.
+2. **Local MySQL Service Dependency**: MySQL service must be running for the Python scraper worker and PHP web application to log prices and alert history.
+3. **Single Recipient Email per Profile**: Email alert notifications are dispatched to the single designated recipient email configured in **Settings**.
+
+---
+
+## 🏗️ Architecture & Technology Stack
+
+- **Web Frontend**: HTML5, Vanilla CSS / Tailwind CSS, Chart.js
 - **Backend API**: PHP 8.x
 - **Database**: MySQL (`search_configs`, `price_history`, `price_access_logs`, `alert_logs`)
-- **Scraper / Alert Engine**: Python 3 (requests, mysql-connector, smtplib)
+- **Scraper / Alert Engine**: Python 3 (`requests`, `mysql-connector-python`, `smtplib`)
