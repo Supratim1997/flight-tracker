@@ -10,19 +10,22 @@ A premium, full-stack flight monitoring system designed to run locally on XAMPP 
 
 ### Key Features:
 - **📊 Interactive Cost Trend Dashboard**: Dark glassmorphism UI powered by Chart.js visualizing lowest flight prices across an 11-day date window.
-- **🚨 Automated Price Drop Alerts**: Background Python worker evaluates flight prices against budget thresholds and dispatches instant SMTP email notifications.
+- **🛫 Textable Indian Airport Autocomplete**: Autocomplete dropdowns covering all major Indian commercial airports (`DEL`, `BOM`, `BLR`, `CCU`, `HYD`, `PNQ`, `AMD`, `GOI`, `COK`, `TRV`, `JAI`, `LKO`, `SXR`, etc.). Supports typing either 3-letter IATA codes (`PNQ`) or city names (`Pune`, `Delhi`).
+- **🎛️ Interactive Filter & Sort Toolbar**: Filter table by Airline, toggle *Under Budget Only* deals, and sort dynamically by Price (Low/High), Departure Time (Earliest/Latest), Date, or Airline (A-Z).
+- **🔗 1-Click Schedule-Matched Booking Links**: Pre-formatted direct search deep links for **MakeMyTrip** (`MMT ↗`), **EaseMyTrip** (`EMT ↗`), and **Google Flights** pre-filled with exact route, date (`DD/MM/YYYY`), and carrier parameters.
+- **🌐 Live Flight Data Scraper**: Background Python worker parses real-time flight schedules, operating airlines, flight numbers, departure/arrival times, and live INR prices directly from live flight data streams.
+- **🚨 Automated Price Drop Alerts**: Background Python worker evaluates live flight prices against budget thresholds and dispatches instant SMTP email and Telegram notifications.
 - **🛡️ 24-Hour Anti-Spam Protection**: Built-in alert rate limiter in MySQL (`alert_logs`) prevents duplicate spam emails for the same flight route within 24 hours.
-- **⚙️ In-App Settings UI**: Configure `.env` settings (SMTP host, port, credentials, recipient email, Telegram tokens, and MySQL config) directly inside the Web UI with 1-click SMTP connection testing.
+- **⚙️ In-App Settings & System Tools**: Configure `.env` credentials with 1-click SMTP connection testing, and execute administrative resets (Clear Profiles & Alert Logs or Reset SMTP credentials) directly inside the Web UI.
 - **⏰ Flexible Background Worker**: Runs independently via Windows Task Scheduler or cron jobs — Apache web server is only needed when using the web UI.
 
 ---
 
-## ⚠️ Current Limitations
+## ⚠️ Current Scope & Limitations
 
-- **Mock Flight Data Engine**: Currently uses a built-in mock flight data generator simulating major domestic airlines (IndiGo, Air India, Vistara, SpiceJet, Akasa Air) for demonstration and testing. Live API integration (e.g., Amadeus API or SerpAPI Google Flights) can be dropped directly into `tracker.py`.
+- **Indian Domestic Airports Focus**: Autocomplete datalist is optimized for major Indian commercial domestic airports.
 - **Local MySQL Service Dependency**: Requires MySQL (via XAMPP or standalone MySQL) to be running continuously so the background Python worker can query search profiles and log alerts.
 - **Single Recipient Email per Profile**: SMTP alerts are dispatched to a single designated recipient email specified in the `.env` settings.
-- **Standard IATA Airport Codes**: Routes are specified using 3-letter airport codes (e.g., `DEL`, `BOM`, `BLR`, `PNQ`).
 
 ---
 
