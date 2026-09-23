@@ -9,6 +9,10 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+# Ensure UTF-8 output encoding for Windows stdout compatibility (emojis support)
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+
 # Load environment variables
 load_dotenv()
 

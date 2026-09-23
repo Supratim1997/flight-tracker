@@ -2,19 +2,23 @@
 // api/trigger_scrape.php
 header('Content-Type: application/json');
 
-// Get the absolute path to the Python scraper script
 $scraper_path = realpath(__DIR__ . '/../scraper/tracker.py');
-$python_executable = 'python'; // or full path to python, e.g., 'C:\\path\\to\\python.exe' if needed
+$scraper_dir = realpath(__DIR__ . '/../scraper');
 
-if (!$scraper_path) {
+if (!$scraper_path || !$scraper_dir) {
     echo json_encode(['success' => false, 'error' => 'Scraper script not found']);
     exit;
 }
 
-// In a real production system, this should be executed asynchronously
-// e.g., redirecting output to > /dev/null 2>&1 & on Linux, or using start /B on Windows.
-// For demonstration, we'll run it synchronously and capture output.
-$command = escapeshellcmd("$python_executable \"$scraper_path\"");
+$activate_bat = $scraper_dir . '\venv\Scripts\activate.bat';
+
+if (file_exists($activate_bat)) {
+    // Activate virtual environment first before running Python
+    $command = "cd /d \"{$scraper_dir}\" && call \"{$activate_bat}\" && python \"{$scraper_path}\"";
+} else {
+    $command = "cd /d \"{$scraper_dir}\" && python \"{$scraper_path}\"";
+}
+
 $output = shell_exec($command . ' 2>&1');
 
 echo json_encode([
