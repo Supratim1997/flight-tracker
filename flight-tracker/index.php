@@ -906,21 +906,25 @@
                         ${d.departure_time.substring(0,5)} - ${d.arrival_time.substring(0,5)}
                     </td>
                     <td class="px-4 py-3 font-mono">
-                        <div class="${priceClass} text-base">₹${parseInt(d.min_price).toLocaleString('en-IN')}</div>
-                        <a href="${googleFlightsUrl}" target="_blank" title="Verify price source on Google Flights Live" class="inline-flex items-center gap-1 text-[10px] text-indigo-400 hover:text-indigo-300 hover:underline mt-0.5">
-                            <span>Google Flights ↗</span>
-                        </a>
+                        <div class="${priceClass} text-base font-bold">₹${parseInt(d.min_price).toLocaleString('en-IN')}</div>
+                        <div class="text-[10px] text-emerald-400 font-sans flex items-center gap-1 mt-0.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            Cheapest Deal
+                        </div>
                     </td>
                     <td class="px-4 py-3 text-right whitespace-nowrap">
                         <div class="inline-flex items-center gap-1.5">
-                            <a href="${googleFlightsUrl}" target="_blank" title="Book ${d.airline} on Google Flights" class="inline-flex items-center gap-1 text-xs bg-indigo-600/30 hover:bg-indigo-600/70 text-indigo-300 hover:text-white border border-indigo-500/40 px-2.5 py-1.5 rounded-lg transition-all font-medium shadow-sm hover:scale-105 transform">
-                                <span>Book on Google</span>
+                            <a href="${mmtUrl}" target="_blank" title="Book cheapest deal on MakeMyTrip (${dCity} -> ${aCity} on ${mmtDate})" class="inline-flex items-center gap-1 text-xs bg-emerald-600/30 hover:bg-emerald-600/70 text-emerald-300 hover:text-white border border-emerald-500/40 px-3 py-1.5 rounded-lg transition-all font-semibold shadow-sm hover:scale-105 transform">
+                                <span>Book on MMT</span>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>
                             </a>
-                            <a href="${mmtUrl}" target="_blank" title="Compare direct search on MakeMyTrip (${dCity} -> ${aCity} on ${mmtDate})" class="inline-flex items-center text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 px-2.5 py-1.5 rounded-lg transition-all font-medium">
-                                MMT ↗
+                            <a href="${googleFlightsUrl}" target="_blank" title="Verify / Book ${d.airline} on Google Flights" class="inline-flex items-center gap-1 text-xs bg-indigo-600/30 hover:bg-indigo-600/70 text-indigo-300 hover:text-white border border-indigo-500/40 px-2.5 py-1.5 rounded-lg transition-all font-medium shadow-sm hover:scale-105 transform">
+                                <span>Google Flights</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
                             </a>
                             <a href="${emtUrl}" target="_blank" title="Compare direct search on EaseMyTrip" class="inline-flex items-center text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 px-2.5 py-1.5 rounded-lg transition-all font-medium">
                                 EMT ↗

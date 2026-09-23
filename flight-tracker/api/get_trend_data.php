@@ -22,12 +22,19 @@ try {
     }
 
     $stmt = $pdo->prepare("
-        SELECT id, flight_date, price_inr as min_price, airline, flight_number, departure_time, arrival_time, is_direct, stops_info 
-        FROM price_history 
-        WHERE config_id = ?
-        ORDER BY flight_date ASC, price_inr ASC
+        SELECT ph.id, ph.flight_date, ph.price_inr as min_price, ph.airline, ph.flight_number, ph.departure_time, ph.arrival_time, ph.is_direct, ph.stops_info 
+        FROM price_history ph
+        INNER JOIN (
+            SELECT flight_date, MIN(price_inr) as lowest_price 
+            FROM price_history 
+            WHERE config_id = ? 
+            GROUP BY flight_date
+        ) min_ph ON ph.flight_date = min_ph.flight_date AND ph.price_inr = min_ph.lowest_price
+        WHERE ph.config_id = ?
+        GROUP BY ph.flight_date
+        ORDER BY ph.flight_date ASC
     ");
-    $stmt->execute([$config_id]);
+    $stmt->execute([$config_id, $config_id]);
     $history = $stmt->fetchAll();
 
     echo json_encode([
