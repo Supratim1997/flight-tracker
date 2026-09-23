@@ -671,34 +671,40 @@
             data.forEach(d => {
                 const isUnderBudget = parseFloat(d.min_price) <= budget;
                 const priceClass = isUnderBudget ? 'text-green-400 font-bold' : 'text-slate-300';
-                const bookUrl = `https://www.google.com/travel/flights?q=flights+from+${depCity || ''}+to+${arrCity || ''}+on+${d.flight_date}`;
+                const googleFlightsUrl = `https://www.google.com/travel/flights?q=flights+from+${depCity || ''}+to+${arrCity || ''}+on+${d.flight_date}`;
+                const mmtUrl = `https://www.makemytrip.com/flight/search?itinerary=${depCity||''}-${arrCity||''}-${d.flight_date.replace(/-/g, '')}&tripType=O&paxType=A-1_C-0_I-0&cabinClass=E`;
                 
                 const tr = document.createElement('tr');
                 tr.className = 'border-b border-slate-700/50 hover:bg-slate-800/30 transition-colors';
                 tr.innerHTML = `
-                    <td class="px-4 py-3 whitespace-nowrap">${d.flight_date}</td>
+                    <td class="px-4 py-3 whitespace-nowrap font-medium text-slate-200">${d.flight_date}</td>
                     <td class="px-4 py-3">
                         <div class="flex items-center gap-2">
                             <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold text-white">
                                 ${d.airline.substring(0,2).toUpperCase()}
                             </div>
                             <span class="text-slate-200">${d.airline}</span>
-                            <span class="text-xs text-slate-500 ml-1">${d.flight_number}</span>
+                            <span class="text-xs text-slate-500 ml-1 font-mono">${d.flight_number}</span>
                         </div>
                     </td>
-                    <td class="px-4 py-3 text-slate-400 text-sm">
+                    <td class="px-4 py-3 text-slate-400 text-sm font-mono">
                         ${d.departure_time.substring(0,5)} - ${d.arrival_time.substring(0,5)}
                     </td>
-                    <td class="px-4 py-3 ${priceClass}">
+                    <td class="px-4 py-3 ${priceClass} font-mono">
                         ₹${parseInt(d.min_price).toLocaleString('en-IN')}
                     </td>
-                    <td class="px-4 py-3 text-right">
-                        <a href="${bookUrl}" target="_blank" class="inline-flex items-center gap-1.5 text-xs bg-indigo-600/30 hover:bg-indigo-600/70 text-indigo-300 hover:text-white border border-indigo-500/40 px-3 py-1.5 rounded-lg transition-all font-medium shadow-sm hover:scale-105 transform">
-                            <span>Book</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                        </a>
+                    <td class="px-4 py-3 text-right whitespace-nowrap">
+                        <div class="inline-flex items-center gap-1.5">
+                            <a href="${googleFlightsUrl}" target="_blank" title="Search on Google Flights" class="inline-flex items-center gap-1 text-xs bg-indigo-600/30 hover:bg-indigo-600/70 text-indigo-300 hover:text-white border border-indigo-500/40 px-2.5 py-1.5 rounded-lg transition-all font-medium shadow-sm hover:scale-105 transform">
+                                <span>Google Flights</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                            </a>
+                            <a href="${mmtUrl}" target="_blank" title="Search on MakeMyTrip" class="inline-flex items-center text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 px-2.5 py-1.5 rounded-lg transition-all font-medium">
+                                MMT ↗
+                            </a>
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
