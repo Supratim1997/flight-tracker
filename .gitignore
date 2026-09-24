@@ -1,3 +1,10 @@
+# Build outputs and dependencies
+target/
+*.jar
+*.war
+*.ear
+*.class
+
 # Environment and sensitive credential files
 .env
 *.env
@@ -23,3 +30,4 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+*.log
