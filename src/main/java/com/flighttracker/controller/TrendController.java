@@ -57,6 +57,7 @@ public class TrendController {
                 item.put(AppConstants.KEY_IS_DIRECT, ph.getIsDirect() ? 1 : 0);
                 item.put(AppConstants.KEY_STOPS_INFO, ph.getStopsInfo());
                 item.put(AppConstants.KEY_SOURCE_URL, ph.getSourceUrl());
+                item.put(AppConstants.KEY_SOURCE_NAME, ph.getSourceName() != null ? ph.getSourceName() : AppConstants.PROVIDER_GOOGLE_FLIGHTS);
                 formattedData.add(item);
             }
 

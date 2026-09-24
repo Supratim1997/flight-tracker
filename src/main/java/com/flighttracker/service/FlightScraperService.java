@@ -25,6 +25,7 @@ public class FlightScraperService {
 
     public FlightScraperService() {
         this.httpClient = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
                 .connectTimeout(Duration.ofSeconds(12))
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .build();
@@ -40,9 +41,15 @@ public class FlightScraperService {
         public Boolean isDirect;
         public String stopsInfo;
         public String sourceUrl;
+        public String sourceName;
 
         public ScrapedFlight(String airline, String flightNumber, LocalTime departureTime, LocalTime arrivalTime,
                              BigDecimal price, Boolean isDirect, String stopsInfo, String sourceUrl) {
+            this(airline, flightNumber, departureTime, arrivalTime, price, isDirect, stopsInfo, sourceUrl, AppConstants.PROVIDER_GOOGLE_FLIGHTS);
+        }
+
+        public ScrapedFlight(String airline, String flightNumber, LocalTime departureTime, LocalTime arrivalTime,
+                             BigDecimal price, Boolean isDirect, String stopsInfo, String sourceUrl, String sourceName) {
             this.airline = airline;
             this.flightNumber = flightNumber;
             this.departureTime = departureTime;
@@ -51,6 +58,7 @@ public class FlightScraperService {
             this.isDirect = isDirect;
             this.stopsInfo = stopsInfo;
             this.sourceUrl = sourceUrl;
+            this.sourceName = sourceName != null ? sourceName : AppConstants.PROVIDER_GOOGLE_FLIGHTS;
         }
     }
 
@@ -116,10 +124,23 @@ public class FlightScraperService {
 
                 JsonNode priceArray = itemNode.get(1);
                 if (!priceArray.isArray() || priceArray.size() == 0) continue;
-                JsonNode firstPrice = priceArray.get(0);
-                if (!firstPrice.isArray() || firstPrice.size() < 2) continue;
 
-                double priceVal = firstPrice.get(1).asDouble();
+                // Find the absolute minimum price among all booking options in priceArray
+                double priceVal = Double.MAX_VALUE;
+                for (JsonNode pElem : priceArray) {
+                    if (pElem.isArray() && pElem.size() >= 2) {
+                        for (int k = 0; k < pElem.size(); k++) {
+                            if (pElem.get(k).isNumber()) {
+                                double p = pElem.get(k).asDouble();
+                                if (p >= 500 && p <= 500000 && p < priceVal) {
+                                    priceVal = p;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (priceVal == Double.MAX_VALUE) continue;
                 BigDecimal price = BigDecimal.valueOf(priceVal);
 
                 JsonNode legContainer = itemNode.get(0);
@@ -153,7 +174,7 @@ public class FlightScraperService {
                 int arrM = parseMinute(arrT);
                 LocalTime arrTime = LocalTime.of(arrH, arrM, 0);
 
-                // Extract exact real carrier flight number (e.g. AI-2951, 6E-6921)
+                // Extract exact real carrier flight number (e.g. AI-2951, 6E-6921, QP-1102)
                 String flightNum = "";
                 if (firstLeg.size() > 22 && firstLeg.get(22).isArray() && firstLeg.get(22).size() >= 2) {
                     JsonNode fCarrierNode = firstLeg.get(22).get(0);
@@ -188,7 +209,7 @@ public class FlightScraperService {
             }
 
             flights.sort(Comparator.comparing(f -> f.price));
-            return flights.size() > 5 ? flights.subList(0, 5) : flights;
+            return flights.size() > 25 ? flights.subList(0, 25) : flights;
 
         } catch (Exception e) {
             System.err.println("⚠️ FlightScraperService warning: " + e.getMessage());
@@ -199,11 +220,17 @@ public class FlightScraperService {
     private void findFlightNodes(JsonNode node, List<JsonNode> result) {
         if (node.isArray()) {
             if (node.size() >= 2 && node.get(1).isArray() && node.get(1).size() > 0) {
-                JsonNode pNode = node.get(1).get(0);
-                if (pNode.isArray() && pNode.size() >= 2 && pNode.get(0).isNull() && pNode.get(1).isNumber()) {
-                    double val = pNode.get(1).asDouble();
-                    if (val >= 2000 && val <= 80000) {
-                        result.add(node);
+                for (JsonNode pNode : node.get(1)) {
+                    if (pNode.isArray()) {
+                        for (int k = 0; k < pNode.size(); k++) {
+                            if (pNode.get(k).isNumber()) {
+                                double val = pNode.get(k).asDouble();
+                                if (val >= 500 && val <= 500000) {
+                                    result.add(node);
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
             }

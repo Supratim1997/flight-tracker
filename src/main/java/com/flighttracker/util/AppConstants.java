@@ -99,4 +99,21 @@ public final class AppConstants {
     // Map / Projections Keys
     public static final String MAP_KEY_FLIGHT_DATE = "flightDate";
     public static final String MAP_KEY_MIN_PRICE = "minPrice";
+
+    // Flight Platform Providers
+    public static final String PROVIDER_GOOGLE_FLIGHTS = "Google Flights";
+    public static final String PROVIDER_EASEMYTRIP = "EaseMyTrip";
+    public static final String PROVIDER_MAKEMYTRIP = "MakeMyTrip";
+    public static final String PROVIDER_IXIGO = "Ixigo";
+    public static final String PROVIDER_GOIBIBO = "Goibibo";
+    public static final String PROVIDER_CLEARTRIP = "Cleartrip";
+    public static final String PROVIDER_YATRA = "Yatra";
+    public static final String PROVIDER_PAYTM = "Paytm";
+
+    // Official Airline Direct Providers
+    public static final String PROVIDER_INDIGO_DIRECT = "IndiGo Direct";
+    public static final String PROVIDER_AIR_INDIA_DIRECT = "Air India Direct";
+    public static final String PROVIDER_AKASA_DIRECT = "Akasa Air Direct";
+    public static final String PROVIDER_SPICEJET_DIRECT = "SpiceJet Direct";
+    public static final String PROVIDER_AIR_INDIA_EXPRESS_DIRECT = "Air India Express Direct";
 }

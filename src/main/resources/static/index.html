@@ -149,7 +149,7 @@
         
         <!-- Left Column: Config Panel -->
         <div class="lg:col-span-1 space-y-6 sm:space-y-8">
-            <div class="glass-panel rounded-2xl p-4 sm:p-6">
+            <div id="profileFormCard" class="glass-panel rounded-2xl p-4 sm:p-6 transition-all duration-300">
                 <div class="flex justify-between items-center mb-5 sm:mb-6">
                     <h2 class="text-lg sm:text-xl font-semibold flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -346,9 +346,17 @@
                         <h2 class="text-lg sm:text-xl font-semibold">Cost Trend Analysis</h2>
                         <p class="text-slate-400 text-xs sm:text-sm mt-0.5" id="chartSubtitle">Select a profile to view ±5 days trend</p>
                     </div>
-                    <div class="text-right flex-shrink-0">
-                        <p class="text-[10px] sm:text-xs text-slate-400 mb-0.5">Target Budget</p>
-                        <p class="text-lg sm:text-xl font-bold text-green-400" id="displayBudget">₹0</p>
+                    <div class="flex items-center gap-3">
+                        <button type="button" onclick="editCurrentActiveProfile()" title="Edit Selected Customer Profile" class="text-xs bg-indigo-600/30 hover:bg-indigo-600/60 text-indigo-300 border border-indigo-500/40 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            <span>Edit Profile</span>
+                        </button>
+                        <div class="text-right flex-shrink-0">
+                            <p class="text-[10px] sm:text-xs text-slate-400 mb-0.5">Target Budget</p>
+                            <p class="text-lg sm:text-xl font-bold text-green-400" id="displayBudget">₹0</p>
+                        </div>
                     </div>
                 </div>
                 <div class="relative h-48 sm:h-64 md:h-72 w-full">
@@ -715,6 +723,8 @@
             document.getElementById('departure').focus();
         }
 
+        let allProfilesCache = [];
+
         async function loadProfiles() {
             try {
                 const res = await fetch('/api/configs');
@@ -723,6 +733,7 @@
                 container.innerHTML = '';
                 
                 if (json.success && json.data.length > 0) {
+                    allProfilesCache = json.data;
                     json.data.forEach(p => {
                         const div = document.createElement('div');
                         const statusColor = p.active == 1 ? 'text-green-400' : 'text-slate-500';
@@ -755,7 +766,7 @@
                                 </div>
                                 <div class="text-xs text-slate-400 mt-1">${p.preferredDate}</div>
                             </div>
-                            <div class="text-right flex items-center gap-3">
+                            <div class="text-right flex items-center gap-2">
                                 <div>
                                     <div class="font-mono text-sm mb-1">₹${p.budgetThreshold}</div>
                                     <div class="flex items-center justify-end gap-1 text-[10px] ${statusColor}">
@@ -763,6 +774,11 @@
                                         ${p.active == 1 ? 'ACTIVE' : 'PAUSED'}
                                     </div>
                                 </div>
+                                <button type="button" onclick="editConfig(${p.id}, event)" title="Edit Customer Profile" class="text-slate-400 hover:text-indigo-300 p-1.5 rounded-lg hover:bg-slate-700/60 transition-colors ml-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </button>
                                 <button type="button" onclick="deleteConfig(${p.id}, event)" title="Delete Route" class="text-slate-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-slate-700/50 transition-colors">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -805,6 +821,34 @@
             document.getElementById('activeToggle').checked = (p.active == 1);
             toggleInput.dispatchEvent(new Event('change'));
             document.getElementById('formTitle').innerText = `Edit Route (${p.departureCity} → ${p.arrivalCity})`;
+        }
+
+        function editConfig(id, e) {
+            if (e) e.stopPropagation();
+            const p = allProfilesCache.find(item => item.id == id);
+            if (p) {
+                currentConfigId = p.id;
+                loadProfileData(p);
+                loadTrendData(p.id);
+                loadProfiles();
+
+                const formCard = document.getElementById('profileFormCard');
+                if (formCard) {
+                    formCard.scrollIntoView({ behavior: 'smooth' });
+                    formCard.classList.add('ring-2', 'ring-indigo-500', 'ring-offset-2', 'ring-offset-slate-900');
+                    setTimeout(() => formCard.classList.remove('ring-2', 'ring-indigo-500', 'ring-offset-2', 'ring-offset-slate-900'), 2500);
+                }
+            }
+        }
+
+        function editCurrentActiveProfile() {
+            if (currentConfigId) {
+                editConfig(currentConfigId);
+            } else if (allProfilesCache.length > 0) {
+                editConfig(allProfilesCache[0].id);
+            } else {
+                alert("No customer profiles available to edit. Click '+ New Route' to create one.");
+            }
         }
 
         async function deleteConfig(id, e) {
@@ -1070,8 +1114,24 @@
                 const googleFlightsUrl = `https://www.google.com/travel/flights?q=${googleQuery}`;
                 
                 const mmtDate = `${dd}/${mm}/${yyyy}`;
+                const isoDate = `${yyyy}-${mm}-${dd}`;
+                
+                // OTAs
                 const mmtUrl = `https://www.makemytrip.com/flight/search?itinerary=${dCity}-${aCity}-${mmtDate}&tripType=O&paxType=A-1_C-0_I-0&intl=false&cabinClass=E`;
                 const emtUrl = `https://flight.easemytrip.com/FlightList/Index?srch=${dCity}-${aCity}-${mmtDate}&px=1-0-0&c=E&m=0&bType=SEARCH`;
+                const ixigoUrl = `https://www.ixigo.com/search/result/flight/${dCity}/${aCity}/${yyyy}${mm}${dd}/1/0/0/e`;
+                const goibiboUrl = `https://www.goibibo.com/flights/${dCity}-${aCity}-${yyyy}${mm}${dd}-1-0-0-E/`;
+                const cleartripUrl = `https://www.cleartrip.com/flights/results?from=${dCity}&to=${aCity}&depart_date=${mmtDate}&adults=1&childs=0&infants=0&class=Economy`;
+                const yatraUrl = `https://flight.yatra.com/air-search/dom2/trigger?type=O&origin=${dCity}&destination=${aCity}&flight_depart_date=${mmtDate}&ADT=1&CHD=0&INF=0&class=Economy`;
+                const paytmUrl = `https://paytm.com/flights/flight-search/${dCity}/${aCity}/1/0/0/e/${isoDate}`;
+
+                // Official Airline Direct Sites
+                const indigoDirectUrl = `https://www.goindigo.in/flight/search.html?ori=${dCity}&des=${aCity}&date=${isoDate}`;
+                const airIndiaDirectUrl = `https://www.airindia.com/in/en/book/flight-search.html?from=${dCity}&to=${aCity}&date=${isoDate}`;
+                const akasaDirectUrl = `https://www.akasaair.com/fly/search?from=${dCity}&to=${aCity}&depart=${isoDate}`;
+                const spicejetDirectUrl = `https://www.spicejet.com/search?from=${dCity}&to=${aCity}&depart=${isoDate}`;
+
+                const providerName = d.source_name || 'Google Flights';
                 
                 const tr = document.createElement('tr');
                 tr.className = 'border-b border-slate-700/50 hover:bg-slate-800/30 transition-colors';
@@ -1087,11 +1147,12 @@
                                     <span class="text-slate-100 font-semibold">${d.airline}</span>
                                     <span class="text-xs text-indigo-300 font-mono bg-indigo-950/80 px-1.5 py-0.5 rounded border border-indigo-800/50">${d.flight_number}</span>
                                 </div>
-                                <div class="mt-1">
+                                <div class="mt-1 flex items-center gap-1.5 flex-wrap">
                                     ${(d.is_direct == 1 || (d.stops_info && d.stops_info.toLowerCase().includes('direct')))
                                         ? '<span class="text-[10px] bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 px-2 py-0.5 rounded-full font-medium">Direct</span>'
                                         : `<span class="text-[10px] bg-amber-950/60 text-amber-400 border border-amber-800/40 px-2 py-0.5 rounded-full font-medium">${d.stops_info || '1 Stop'}</span>`
                                     }
+                                    <span class="text-[10px] bg-cyan-950/70 text-cyan-300 border border-cyan-800/50 px-2 py-0.5 rounded-full font-medium">${providerName}</span>
                                 </div>
                             </div>
                         </div>
@@ -1106,8 +1167,8 @@
                     </td>
                     <td class="px-4 py-3 text-right whitespace-nowrap">
                         <div class="inline-flex items-center gap-1.5">
-                            <a href="${d.source_url || googleFlightsUrl}" target="_blank" title="Open exact source URL where ₹${parseInt(d.min_price).toLocaleString('en-IN')} price was extracted" class="inline-flex items-center gap-1.5 text-xs bg-indigo-600/40 hover:bg-indigo-600/80 text-indigo-200 hover:text-white border border-indigo-500/50 px-2.5 sm:px-3 py-1.5 rounded-lg transition-all font-semibold shadow-md hover:scale-105 transform">
-                                <span>Book Deal (₹${parseInt(d.min_price).toLocaleString('en-IN')})</span>
+                            <a href="${d.source_url || googleFlightsUrl}" target="_blank" title="Open ${providerName} deal page" class="inline-flex items-center gap-1.5 text-xs bg-indigo-600/40 hover:bg-indigo-600/80 text-indigo-200 hover:text-white border border-indigo-500/50 px-2.5 sm:px-3 py-1.5 rounded-lg transition-all font-semibold shadow-md hover:scale-105 transform">
+                                <span>Book ${providerName} (₹${parseInt(d.min_price).toLocaleString('en-IN')})</span>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>
@@ -1115,18 +1176,26 @@
 
                             <div class="relative group inline-block text-left">
                                 <button type="button" class="inline-flex items-center gap-1 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 px-2.5 py-1.5 rounded-lg transition-all font-medium">
-                                    <span>Others</span>
+                                    <span>More Options</span>
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                     </svg>
                                 </button>
-                                <div class="absolute right-0 mt-1 w-36 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl hidden group-hover:block z-20 py-1">
-                                    <a href="${mmtUrl}" target="_blank" class="block px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-emerald-400 font-medium">
-                                        MakeMyTrip ↗
-                                    </a>
-                                    <a href="${emtUrl}" target="_blank" class="block px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-indigo-400 font-medium">
-                                        EaseMyTrip ↗
-                                    </a>
+                                <div class="absolute right-0 mt-1 w-48 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl hidden group-hover:block z-20 py-1 text-left">
+                                    <div class="px-3 py-1 text-[10px] uppercase tracking-wider text-slate-500 font-bold border-b border-slate-800">Official Airlines Direct</div>
+                                    <a href="${indigoDirectUrl}" target="_blank" class="block px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-indigo-400 font-medium">IndiGo Direct ↗</a>
+                                    <a href="${airIndiaDirectUrl}" target="_blank" class="block px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-rose-400 font-medium">Air India Direct ↗</a>
+                                    <a href="${akasaDirectUrl}" target="_blank" class="block px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-amber-400 font-medium">Akasa Air Direct ↗</a>
+                                    <a href="${spicejetDirectUrl}" target="_blank" class="block px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-red-400 font-medium">SpiceJet Direct ↗</a>
+
+                                    <div class="px-3 py-1 text-[10px] uppercase tracking-wider text-slate-500 font-bold border-t border-b border-slate-800 mt-1">OTAs & Aggregators</div>
+                                    <a href="${mmtUrl}" target="_blank" class="block px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-emerald-400 font-medium">MakeMyTrip ↗</a>
+                                    <a href="${emtUrl}" target="_blank" class="block px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-indigo-400 font-medium">EaseMyTrip ↗</a>
+                                    <a href="${ixigoUrl}" target="_blank" class="block px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-orange-400 font-medium">Ixigo ↗</a>
+                                    <a href="${goibiboUrl}" target="_blank" class="block px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-blue-400 font-medium">Goibibo ↗</a>
+                                    <a href="${cleartripUrl}" target="_blank" class="block px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-cyan-400 font-medium">Cleartrip ↗</a>
+                                    <a href="${yatraUrl}" target="_blank" class="block px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-rose-400 font-medium">Yatra ↗</a>
+                                    <a href="${paytmUrl}" target="_blank" class="block px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-sky-400 font-medium">Paytm Travel ↗</a>
                                 </div>
                             </div>
                         </div>

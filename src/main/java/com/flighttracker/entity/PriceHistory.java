@@ -45,6 +45,9 @@ public class PriceHistory {
     @Column(name = "source_url", columnDefinition = "TEXT")
     private String sourceUrl;
 
+    @Column(name = "source_name", length = 100)
+    private String sourceName = "Google Flights";
+
     @Column(name = "scraped_at")
     private LocalDateTime scrapedAt = LocalDateTime.now();
 
@@ -53,6 +56,12 @@ public class PriceHistory {
     public PriceHistory(SearchConfig searchConfig, LocalDate flightDate, String airline, String flightNumber, 
                         LocalTime departureTime, LocalTime arrivalTime, BigDecimal priceInr, 
                         Boolean isDirect, String stopsInfo, String sourceUrl) {
+        this(searchConfig, flightDate, airline, flightNumber, departureTime, arrivalTime, priceInr, isDirect, stopsInfo, sourceUrl, "Google Flights");
+    }
+
+    public PriceHistory(SearchConfig searchConfig, LocalDate flightDate, String airline, String flightNumber, 
+                        LocalTime departureTime, LocalTime arrivalTime, BigDecimal priceInr, 
+                        Boolean isDirect, String stopsInfo, String sourceUrl, String sourceName) {
         this.searchConfig = searchConfig;
         this.flightDate = flightDate;
         this.airline = airline;
@@ -63,6 +72,7 @@ public class PriceHistory {
         this.isDirect = isDirect != null ? isDirect : true;
         this.stopsInfo = stopsInfo != null ? stopsInfo : "Direct";
         this.sourceUrl = sourceUrl;
+        this.sourceName = sourceName != null ? sourceName : "Google Flights";
         this.scrapedAt = LocalDateTime.now();
     }
 
@@ -99,6 +109,9 @@ public class PriceHistory {
 
     public String getSourceUrl() { return sourceUrl; }
     public void setSourceUrl(String sourceUrl) { this.sourceUrl = sourceUrl; }
+
+    public String getSourceName() { return sourceName; }
+    public void setSourceName(String sourceName) { this.sourceName = sourceName; }
 
     public LocalDateTime getScrapedAt() { return scrapedAt; }
     public void setScrapedAt(LocalDateTime scrapedAt) { this.scrapedAt = scrapedAt; }
