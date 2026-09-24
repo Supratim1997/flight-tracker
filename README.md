@@ -48,6 +48,11 @@ The application is 100% self-contained in a single **Java 21 / Spring Boot** pro
    ```sql
    CREATE DATABASE IF NOT EXISTS flight_tracker_db;
    ```
+4. Execute the provided `schema.sql` script (located in the project root) to create/update tables with per-profile alert notification columns:
+   ```bash
+   mysql -u root -p flight_tracker_db < schema.sql
+   ```
+   *(Or copy-paste the contents of `schema.sql` into phpMyAdmin / MySQL Workbench).*
 
 ---
 

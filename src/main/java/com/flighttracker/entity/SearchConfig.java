@@ -30,6 +30,31 @@ public class SearchConfig {
     @Column(name = "active", nullable = false)
     private Integer active = 1;
 
+    // Per-Profile Alert Notification Settings
+    @Column(name = "alert_method", length = 20)
+    private String alertMethod = "NONE"; // NONE, SMTP, TELEGRAM, BOTH
+
+    @Column(name = "smtp_server", length = 100)
+    private String smtpServer;
+
+    @Column(name = "smtp_port")
+    private Integer smtpPort = 587;
+
+    @Column(name = "smtp_user", length = 100)
+    private String smtpUser;
+
+    @Column(name = "smtp_pass_encrypted", length = 255)
+    private String smtpPassEncrypted;
+
+    @Column(name = "alert_recipient", length = 100)
+    private String alertRecipient;
+
+    @Column(name = "telegram_bot_token_encrypted", length = 255)
+    private String telegramBotTokenEncrypted;
+
+    @Column(name = "telegram_chat_id", length = 50)
+    private String telegramChatId;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -68,6 +93,30 @@ public class SearchConfig {
 
     public Integer getActive() { return active; }
     public void setActive(Integer active) { this.active = active; }
+
+    public String getAlertMethod() { return alertMethod != null ? alertMethod : "NONE"; }
+    public void setAlertMethod(String alertMethod) { this.alertMethod = alertMethod; }
+
+    public String getSmtpServer() { return smtpServer; }
+    public void setSmtpServer(String smtpServer) { this.smtpServer = smtpServer; }
+
+    public Integer getSmtpPort() { return smtpPort; }
+    public void setSmtpPort(Integer smtpPort) { this.smtpPort = smtpPort; }
+
+    public String getSmtpUser() { return smtpUser; }
+    public void setSmtpUser(String smtpUser) { this.smtpUser = smtpUser; }
+
+    public String getSmtpPassEncrypted() { return smtpPassEncrypted; }
+    public void setSmtpPassEncrypted(String smtpPassEncrypted) { this.smtpPassEncrypted = smtpPassEncrypted; }
+
+    public String getAlertRecipient() { return alertRecipient; }
+    public void setAlertRecipient(String alertRecipient) { this.alertRecipient = alertRecipient; }
+
+    public String getTelegramBotTokenEncrypted() { return telegramBotTokenEncrypted; }
+    public void setTelegramBotTokenEncrypted(String telegramBotTokenEncrypted) { this.telegramBotTokenEncrypted = telegramBotTokenEncrypted; }
+
+    public String getTelegramChatId() { return telegramChatId; }
+    public void setTelegramChatId(String telegramChatId) { this.telegramChatId = telegramChatId; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

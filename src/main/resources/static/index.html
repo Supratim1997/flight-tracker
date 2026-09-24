@@ -200,6 +200,80 @@
                             </select>
                         </div>
                     </div>
+
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1 font-medium">Alert Notifications</label>
+                        <select id="alertMethod" name="alert_method" onchange="toggleAlertSections()" class="input-glass w-full rounded-lg px-3 py-2 text-xs bg-slate-900 border-slate-700">
+                            <option value="NONE">No Alerts (Dashboard Only)</option>
+                            <option value="SMTP">📧 Email Alert (SMTP)</option>
+                            <option value="TELEGRAM">📱 Telegram Alert</option>
+                            <option value="BOTH">📧+📱 Email & Telegram Alerts</option>
+                        </select>
+                    </div>
+
+                    <!-- Collapsible SMTP Config Section -->
+                    <div id="smtpSection" class="hidden space-y-3 p-3 bg-slate-900/60 rounded-xl border border-slate-700/60">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-semibold text-indigo-300">📧 SMTP Email Configuration</span>
+                            <div class="flex gap-1.5">
+                                <button type="button" onclick="applySmtpPresetForm('gmail')" class="text-[10px] bg-indigo-600/30 hover:bg-indigo-600/60 text-indigo-300 px-2 py-0.5 rounded border border-indigo-500/30">Gmail</button>
+                                <button type="button" onclick="applySmtpPresetForm('outlook')" class="text-[10px] bg-blue-600/30 hover:bg-blue-600/60 text-blue-300 px-2 py-0.5 rounded border border-blue-500/30">Outlook</button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="col-span-2">
+                                <label class="block text-[10px] text-slate-400 mb-0.5">SMTP Host</label>
+                                <input type="text" id="smtpServer" name="smtp_server" class="input-glass w-full rounded-md px-2.5 py-1.5 text-xs" placeholder="smtp.gmail.com">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-400 mb-0.5">Port</label>
+                                <input type="number" id="smtpPort" name="smtp_port" class="input-glass w-full rounded-md px-2.5 py-1.5 text-xs" placeholder="587">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-0.5">Sender Email</label>
+                            <input type="email" id="smtpUser" name="smtp_user" class="input-glass w-full rounded-md px-2.5 py-1.5 text-xs" placeholder="your_email@gmail.com">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-0.5">App Password (AES Encrypted)</label>
+                            <input type="password" id="smtpPass" name="smtp_pass" class="input-glass w-full rounded-md px-2.5 py-1.5 text-xs" placeholder="16-character app password">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-0.5">Alert Recipient Email</label>
+                            <input type="email" id="alertRecipient" name="alert_recipient" class="input-glass w-full rounded-md px-2.5 py-1.5 text-xs" placeholder="recipient@example.com">
+                        </div>
+                        <div class="pt-1 flex items-center justify-between">
+                            <button type="button" onclick="testProfileSmtpConnection()" id="profileSmtpTestBtn" class="text-xs bg-indigo-950/80 hover:bg-indigo-900 text-indigo-300 border border-indigo-700/60 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 shadow-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                <span id="profileSmtpTestBtnText">⚡ Test SMTP Connection</span>
+                            </button>
+                        </div>
+                        <div id="profileSmtpTestResult" class="text-xs p-2.5 rounded-lg hidden"></div>
+                    </div>
+
+                    <!-- Collapsible Telegram Config Section -->
+                    <div id="telegramSection" class="hidden space-y-3 p-3 bg-slate-900/60 rounded-xl border border-slate-700/60">
+                        <span class="text-xs font-semibold text-emerald-300">📱 Telegram Bot Configuration</span>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-0.5">Bot Token (AES Encrypted)</label>
+                            <input type="password" id="telegramBotToken" name="telegram_bot_token" class="input-glass w-full rounded-md px-2.5 py-1.5 text-xs" placeholder="123456789:ABCdefGHIjklMNO...">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-0.5">Chat ID</label>
+                            <input type="text" id="telegramChatId" name="telegram_chat_id" class="input-glass w-full rounded-md px-2.5 py-1.5 text-xs" placeholder="-100123456789">
+                        </div>
+                        <div class="pt-1 flex items-center justify-between">
+                            <button type="button" onclick="testProfileTelegramConnection()" id="profileTelegramTestBtn" class="text-xs bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/60 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 shadow-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                                <span id="profileTelegramTestBtnText">⚡ Test Telegram Connection</span>
+                            </button>
+                        </div>
+                        <div id="profileTelegramTestResult" class="text-xs p-2.5 rounded-lg hidden"></div>
+                    </div>
                     
                     <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
                         <label class="flex items-center cursor-pointer">
@@ -429,8 +503,8 @@
                         </svg>
                     </div>
                     <div>
-                        <h2 class="text-lg sm:text-xl font-bold text-white">Environment & SMTP Settings</h2>
-                        <p class="text-[11px] sm:text-xs text-slate-400">Configure Spring Boot SMTP email alerts & notification settings</p>
+                        <h2 class="text-lg sm:text-xl font-bold text-white">Profile Alert & Notification Settings</h2>
+                        <p class="text-[11px] sm:text-xs text-slate-400">Configure per-profile SMTP Email and Telegram Bot alerts for active tracking routes</p>
                     </div>
                 </div>
                 <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors">
@@ -440,73 +514,124 @@
                 </button>
             </div>
 
-            <form id="envSettingsForm" onsubmit="saveEnvSettings(event)">
+            <form id="profileAlertSettingsForm" onsubmit="saveModalSettings(event)">
                 <div class="space-y-4">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 bg-slate-800/40 p-3 rounded-xl border border-slate-700/50">
-                        <span class="text-xs text-slate-300 font-medium">Quick Provider Presets:</span>
-                        <div class="flex gap-2 w-full sm:w-auto">
-                            <button type="button" onclick="applySmtpPreset('gmail')" class="flex-1 sm:flex-none text-xs bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/40 px-2.5 py-1 rounded-md transition-all">
-                                Gmail (smtp.gmail.com)
-                            </button>
-                            <button type="button" onclick="applySmtpPreset('outlook')" class="flex-1 sm:flex-none text-xs bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 border border-blue-500/40 px-2.5 py-1 rounded-md transition-all">
-                                Outlook (smtp.office365.com)
-                            </button>
+                    <!-- Target Profile Selector Header -->
+                    <div class="bg-indigo-950/40 border border-indigo-500/30 p-3 sm:p-4 rounded-xl space-y-2">
+                        <label class="block text-xs font-semibold text-indigo-300">Active Profile to Configure:</label>
+                        <select id="settingsProfileSelect" onchange="onSettingsProfileChange()" class="input-glass w-full rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold bg-slate-900 border-indigo-500/50 text-white">
+                            <option value="0">Loading tracking profiles...</option>
+                        </select>
+                        <div id="settingsProfileBanner" class="text-[11px] text-slate-400 flex items-center justify-between pt-1">
+                            <span>Select a profile above to load and edit its alert credentials</span>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                        <div class="sm:col-span-2">
-                            <label class="block text-xs text-slate-400 mb-1">SMTP Server</label>
-                            <input type="text" id="env_SMTP_SERVER" name="SMTP_SERVER" class="input-glass w-full rounded-lg px-3.5 py-2" placeholder="smtp.gmail.com">
+                    <!-- Alert Notification Method Selection -->
+                    <div>
+                        <label class="block text-xs text-slate-300 mb-1 font-semibold">Notification Method</label>
+                        <select id="modalAlertMethod" name="alert_method" onchange="toggleModalAlertSections()" class="input-glass w-full rounded-lg px-3 py-2 text-xs bg-slate-900 border-slate-700">
+                            <option value="NONE">No Alerts (Dashboard Only)</option>
+                            <option value="SMTP">📧 Email Alert (SMTP)</option>
+                            <option value="TELEGRAM">📱 Telegram Alert</option>
+                            <option value="BOTH">📧+📱 Email & Telegram Alerts</option>
+                        </select>
+                    </div>
+
+                    <!-- Collapsible SMTP Configuration Block -->
+                    <div id="modalSmtpSection" class="hidden space-y-3 p-3.5 bg-slate-900/80 rounded-xl border border-indigo-800/40">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-semibold text-indigo-300">📧 SMTP Email Credentials</span>
+                            <div class="flex gap-1.5">
+                                <button type="button" onclick="applyModalSmtpPreset('gmail')" class="text-[10px] bg-indigo-600/30 hover:bg-indigo-600/60 text-indigo-300 px-2 py-0.5 rounded border border-indigo-500/30">Gmail</button>
+                                <button type="button" onclick="applyModalSmtpPreset('outlook')" class="text-[10px] bg-blue-600/30 hover:bg-blue-600/60 text-blue-300 px-2 py-0.5 rounded border border-blue-500/30">Outlook</button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 sm:gap-3">
+                            <div class="col-span-2">
+                                <label class="block text-[10px] text-slate-400 mb-0.5">SMTP Host</label>
+                                <input type="text" id="modalSmtpServer" name="smtp_server" class="input-glass w-full rounded-md px-3 py-1.5 text-xs" placeholder="smtp.gmail.com">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-400 mb-0.5">Port</label>
+                                <input type="number" id="modalSmtpPort" name="smtp_port" class="input-glass w-full rounded-md px-3 py-1.5 text-xs" placeholder="587">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-0.5">Sender Email</label>
+                            <input type="email" id="modalSmtpUser" name="smtp_user" class="input-glass w-full rounded-md px-3 py-1.5 text-xs" placeholder="your_email@gmail.com">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-0.5">App Password (AES Encrypted)</label>
+                            <div class="relative">
+                                <input type="password" id="modalSmtpPass" name="smtp_pass" class="input-glass w-full rounded-md px-3 py-1.5 text-xs pr-10" placeholder="16-character app password">
+                                <button type="button" onclick="togglePasswordVisibility('modalSmtpPass')" class="absolute right-2.5 top-2 text-slate-400 hover:text-white">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-0.5">Alert Recipient Email</label>
+                            <input type="email" id="modalAlertRecipient" name="alert_recipient" class="input-glass w-full rounded-md px-3 py-1.5 text-xs" placeholder="recipient@example.com">
+                        </div>
+
+                        <div class="pt-1 flex items-center justify-between">
+                            <button type="button" onclick="testModalSmtpConnection()" id="modalSmtpTestBtn" class="text-xs bg-indigo-950/90 hover:bg-indigo-900 text-indigo-300 border border-indigo-700/70 px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 shadow-sm font-medium">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                <span id="modalSmtpTestBtnText">⚡ Test SMTP Connection</span>
+                            </button>
+                        </div>
+                        <div id="modalSmtpTestResult" class="text-xs p-2.5 rounded-lg hidden"></div>
+                    </div>
+
+                    <!-- Collapsible Telegram Configuration Block -->
+                    <div id="modalTelegramSection" class="hidden space-y-3 p-3.5 bg-slate-900/80 rounded-xl border border-emerald-800/40">
+                        <span class="text-xs font-semibold text-emerald-300">📱 Telegram Bot Credentials</span>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-0.5">Bot Token (AES Encrypted)</label>
+                            <div class="relative">
+                                <input type="password" id="modalTelegramBotToken" name="telegram_bot_token" class="input-glass w-full rounded-md px-3 py-1.5 text-xs pr-10" placeholder="123456789:ABCdefGHIjklMNO...">
+                                <button type="button" onclick="togglePasswordVisibility('modalTelegramBotToken')" class="absolute right-2.5 top-2 text-slate-400 hover:text-white">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                         <div>
-                            <label class="block text-xs text-slate-400 mb-1">SMTP Port</label>
-                            <input type="number" id="env_SMTP_PORT" name="SMTP_PORT" class="input-glass w-full rounded-lg px-3.5 py-2" placeholder="587">
+                            <label class="block text-[10px] text-slate-400 mb-0.5">Chat ID</label>
+                            <input type="text" id="modalTelegramChatId" name="telegram_chat_id" class="input-glass w-full rounded-md px-3 py-1.5 text-xs" placeholder="-100123456789">
                         </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">SMTP Username / Sender Email</label>
-                        <input type="email" id="env_SMTP_USER" name="SMTP_USER" class="input-glass w-full rounded-lg px-3.5 py-2" placeholder="your_email@gmail.com">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">SMTP Password / App Password</label>
-                        <div class="relative">
-                            <input type="password" id="env_SMTP_PASS" name="SMTP_PASS" class="input-glass w-full rounded-lg px-3.5 py-2 pr-10" placeholder="16-character app password">
-                            <button type="button" onclick="togglePasswordVisibility('env_SMTP_PASS')" class="absolute right-3 top-2.5 text-slate-400 hover:text-white">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        <div class="pt-1 flex items-center justify-between">
+                            <button type="button" onclick="testModalTelegramConnection()" id="modalTelegramTestBtn" class="text-xs bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/70 px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 shadow-sm font-medium">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                                 </svg>
+                                <span id="modalTelegramTestBtnText">⚡ Test Telegram Connection</span>
                             </button>
                         </div>
+                        <div id="modalTelegramTestResult" class="text-xs p-2.5 rounded-lg hidden"></div>
                     </div>
-
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Alert Recipient Email</label>
-                        <input type="email" id="env_ALERT_RECIPIENT" name="ALERT_RECIPIENT" class="input-glass w-full rounded-lg px-3.5 py-2" placeholder="alert_recipient@example.com">
-                    </div>
-
-                    <div class="pt-2 flex items-center justify-between">
-                        <button type="button" onclick="testSmtpConnection()" id="smtpTestBtn" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-indigo-400 border border-indigo-500/40 px-4 py-2 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                            <span id="smtpTestBtnText">Test SMTP Connection</span>
-                        </button>
-                    </div>
-                    <div id="smtpTestResult" class="text-xs p-3 rounded-lg hidden"></div>
                 </div>
 
                 <div class="pt-5 sm:pt-6 border-t border-slate-700/60 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                    <div id="envFormMsg" class="text-xs text-green-400 hidden">Environment settings saved!</div>
+                    <div id="modalFormMsg" class="text-xs text-green-400 hidden">Profile alert settings saved!</div>
                     <div class="flex gap-3 ml-auto w-full sm:w-auto">
                         <button type="button" onclick="closeSettingsModal()" class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
                             Cancel
                         </button>
-                        <button type="submit" id="saveEnvBtn" class="flex-1 sm:flex-none bg-primary hover:bg-indigo-500 text-white px-6 py-2 rounded-lg text-sm font-medium transition-all shadow-lg shadow-indigo-500/30">
-                            Save Settings
+                        <button type="submit" id="saveModalBtn" class="flex-1 sm:flex-none bg-primary hover:bg-indigo-500 text-white px-6 py-2 rounded-lg text-sm font-medium transition-all shadow-lg shadow-indigo-500/30">
+                            Save Profile Credentials
                         </button>
                     </div>
                 </div>
@@ -534,6 +659,38 @@
 
         toggleBg.classList.replace('bg-slate-700', 'bg-primary');
 
+        function toggleAlertSections() {
+            const method = document.getElementById('alertMethod')?.value || 'NONE';
+            const smtpSec = document.getElementById('smtpSection');
+            const teleSec = document.getElementById('telegramSection');
+            
+            if (smtpSec) {
+                if (method === 'SMTP' || method === 'BOTH') {
+                    smtpSec.classList.remove('hidden');
+                } else {
+                    smtpSec.classList.add('hidden');
+                }
+            }
+            
+            if (teleSec) {
+                if (method === 'TELEGRAM' || method === 'BOTH') {
+                    teleSec.classList.remove('hidden');
+                } else {
+                    teleSec.classList.add('hidden');
+                }
+            }
+        }
+
+        function applySmtpPresetForm(provider) {
+            if (provider === 'gmail') {
+                if (document.getElementById('smtpServer')) document.getElementById('smtpServer').value = 'smtp.gmail.com';
+                if (document.getElementById('smtpPort')) document.getElementById('smtpPort').value = '587';
+            } else if (provider === 'outlook') {
+                if (document.getElementById('smtpServer')) document.getElementById('smtpServer').value = 'smtp.office365.com';
+                if (document.getElementById('smtpPort')) document.getElementById('smtpPort').value = '587';
+            }
+        }
+
         function resetConfigForm() {
             document.getElementById('configId').value = '0';
             document.getElementById('departure').value = '';
@@ -541,6 +698,17 @@
             document.getElementById('prefDate').value = '';
             document.getElementById('budget').value = '';
             if (document.getElementById('flightType')) document.getElementById('flightType').value = 'ALL';
+            if (document.getElementById('alertMethod')) document.getElementById('alertMethod').value = 'NONE';
+            if (document.getElementById('smtpServer')) document.getElementById('smtpServer').value = '';
+            if (document.getElementById('smtpPort')) document.getElementById('smtpPort').value = '587';
+            if (document.getElementById('smtpUser')) document.getElementById('smtpUser').value = '';
+            if (document.getElementById('smtpPass')) document.getElementById('smtpPass').value = '';
+            if (document.getElementById('alertRecipient')) document.getElementById('alertRecipient').value = '';
+            if (document.getElementById('telegramBotToken')) document.getElementById('telegramBotToken').value = '';
+            if (document.getElementById('telegramChatId')) document.getElementById('telegramChatId').value = '';
+            if (document.getElementById('profileSmtpTestResult')) document.getElementById('profileSmtpTestResult').classList.add('hidden');
+            if (document.getElementById('profileTelegramTestResult')) document.getElementById('profileTelegramTestResult').classList.add('hidden');
+            toggleAlertSections();
             document.getElementById('activeToggle').checked = true;
             toggleInput.dispatchEvent(new Event('change'));
             document.getElementById('formTitle').innerText = 'New Flight Route';
@@ -561,6 +729,16 @@
                         const dotColor = p.active == 1 ? 'bg-green-400' : 'bg-slate-500';
                         const isSelected = currentConfigId == p.id;
                         const typeLabel = p.flightType == 'DIRECT' ? 'Direct Only' : (p.flightType == 'LAYOVER' ? 'Layovers Only' : 'All Flights');
+                        
+                        let alertBadge = '<span class="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700">No Alerts</span>';
+                        if (p.alertMethod === 'SMTP') {
+                            alertBadge = '<span class="text-[9px] bg-indigo-950/80 text-indigo-300 px-1.5 py-0.5 rounded border border-indigo-800/50">📧 Email</span>';
+                        } else if (p.alertMethod === 'TELEGRAM') {
+                            alertBadge = '<span class="text-[9px] bg-emerald-950/80 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-800/50">📱 Telegram</span>';
+                        } else if (p.alertMethod === 'BOTH') {
+                            alertBadge = '<span class="text-[9px] bg-amber-950/80 text-amber-300 px-1.5 py-0.5 rounded border border-amber-800/50">📧+📱 Both</span>';
+                        }
+
                         div.className = `p-3 rounded-xl border border-slate-700/50 hover:border-primary/50 cursor-pointer transition-all bg-slate-800/30 flex justify-between items-center ${isSelected ? 'border-primary ring-1 ring-primary/30 bg-slate-800/70' : ''}`;
                         div.onclick = () => {
                             currentConfigId = p.id;
@@ -570,9 +748,10 @@
                         };
                         div.innerHTML = `
                             <div class="flex-1">
-                                <div class="font-semibold text-white tracking-wider flex items-center gap-2">
+                                <div class="font-semibold text-white tracking-wider flex items-center gap-1.5 flex-wrap">
                                     ${p.departureCity} → ${p.arrivalCity}
                                     <span class="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full font-normal">${typeLabel}</span>
+                                    ${alertBadge}
                                 </div>
                                 <div class="text-xs text-slate-400 mt-1">${p.preferredDate}</div>
                             </div>
@@ -614,6 +793,15 @@
             document.getElementById('prefDate').value = p.preferredDate;
             document.getElementById('budget').value = p.budgetThreshold;
             if (document.getElementById('flightType')) document.getElementById('flightType').value = p.flightType || 'ALL';
+            if (document.getElementById('alertMethod')) document.getElementById('alertMethod').value = p.alertMethod || 'NONE';
+            if (document.getElementById('smtpServer')) document.getElementById('smtpServer').value = p.smtpServer || '';
+            if (document.getElementById('smtpPort')) document.getElementById('smtpPort').value = p.smtpPort || 587;
+            if (document.getElementById('smtpUser')) document.getElementById('smtpUser').value = p.smtpUser || '';
+            if (document.getElementById('smtpPass')) document.getElementById('smtpPass').value = p.hasSmtpPass ? '••••••••' : '';
+            if (document.getElementById('alertRecipient')) document.getElementById('alertRecipient').value = p.alertRecipient || '';
+            if (document.getElementById('telegramBotToken')) document.getElementById('telegramBotToken').value = p.hasTelegramToken ? '••••••••' : '';
+            if (document.getElementById('telegramChatId')) document.getElementById('telegramChatId').value = p.telegramChatId || '';
+            toggleAlertSections();
             document.getElementById('activeToggle').checked = (p.active == 1);
             toggleInput.dispatchEvent(new Event('change'));
             document.getElementById('formTitle').innerText = `Edit Route (${p.departureCity} → ${p.arrivalCity})`;
@@ -1004,77 +1192,139 @@
             }
         }
 
-        async function loadSettings() {
-            try {
-                const res = await fetch('/api/env-config');
-                const json = await res.json();
-                if (json.success && json.data) {
-                    for (const [key, val] of Object.entries(json.data)) {
-                        const el = document.getElementById('env_' + key);
-                        if (el) el.value = val;
-                    }
-                }
-            } catch (e) {
-                console.error("Failed to load settings", e);
-            }
-        }
+        let allProfilesCache = [];
 
         async function openSettingsModal() {
-            await loadSettings();
+            try {
+                const res = await fetch('/api/configs');
+                const json = await res.json();
+                const selectEl = document.getElementById('settingsProfileSelect');
+                selectEl.innerHTML = '';
+                allProfilesCache = json.success ? (json.data || []) : [];
+
+                if (allProfilesCache.length > 0) {
+                    allProfilesCache.forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.id;
+                        opt.innerText = `${p.departureCity} → ${p.arrivalCity} (${p.preferredDate}) - Budget: ₹${p.budgetThreshold}`;
+                        selectEl.appendChild(opt);
+                    });
+
+                    // Select current active profile if available
+                    let targetId = currentConfigId;
+                    if (!targetId || !allProfilesCache.find(p => p.id == targetId)) {
+                        targetId = allProfilesCache[0].id;
+                    }
+                    selectEl.value = targetId;
+                    onSettingsProfileChange();
+                } else {
+                    selectEl.innerHTML = '<option value="0">No active tracking profiles found</option>';
+                    document.getElementById('settingsProfileBanner').innerHTML = '<span class="text-amber-400">Create a flight route profile first to configure its alert credentials.</span>';
+                }
+            } catch (e) {
+                console.error("Failed to load profiles for settings modal", e);
+            }
             document.getElementById('settingsModal').classList.remove('hidden');
         }
 
         function closeSettingsModal() {
             document.getElementById('settingsModal').classList.add('hidden');
-            document.getElementById('smtpTestResult').classList.add('hidden');
-            document.getElementById('envFormMsg').classList.add('hidden');
+            if (document.getElementById('modalSmtpTestResult')) document.getElementById('modalSmtpTestResult').classList.add('hidden');
+            if (document.getElementById('modalTelegramTestResult')) document.getElementById('modalTelegramTestResult').classList.add('hidden');
+            if (document.getElementById('modalFormMsg')) document.getElementById('modalFormMsg').classList.add('hidden');
         }
 
-        function togglePasswordVisibility(fieldId) {
-            const input = document.getElementById(fieldId);
-            input.type = input.type === 'password' ? 'text' : 'password';
+        function onSettingsProfileChange() {
+            const selectEl = document.getElementById('settingsProfileSelect');
+            const profileId = selectEl ? selectEl.value : 0;
+            const profile = allProfilesCache.find(p => p.id == profileId);
+            const banner = document.getElementById('settingsProfileBanner');
+
+            if (profile) {
+                banner.innerHTML = `<span class="text-indigo-300 font-medium">📍 Editing Alert Credentials for Profile #${profile.id}: <b class="text-white">${profile.departureCity} → ${profile.arrivalCity}</b> (${profile.preferredDate})</span>`;
+                document.getElementById('modalAlertMethod').value = profile.alertMethod || 'NONE';
+                document.getElementById('modalSmtpServer').value = profile.smtpServer || '';
+                document.getElementById('modalSmtpPort').value = profile.smtpPort || 587;
+                document.getElementById('modalSmtpUser').value = profile.smtpUser || '';
+                document.getElementById('modalSmtpPass').value = profile.hasSmtpPass ? '••••••••' : '';
+                document.getElementById('modalAlertRecipient').value = profile.alertRecipient || '';
+                document.getElementById('modalTelegramBotToken').value = profile.hasTelegramToken ? '••••••••' : '';
+                document.getElementById('modalTelegramChatId').value = profile.telegramChatId || '';
+            } else {
+                banner.innerHTML = '<span class="text-slate-400">No profile selected</span>';
+            }
+            toggleModalAlertSections();
+            if (document.getElementById('modalSmtpTestResult')) document.getElementById('modalSmtpTestResult').classList.add('hidden');
+            if (document.getElementById('modalTelegramTestResult')) document.getElementById('modalTelegramTestResult').classList.add('hidden');
         }
 
-        function applySmtpPreset(provider) {
-            if (provider === 'gmail') {
-                document.getElementById('env_SMTP_SERVER').value = 'smtp.gmail.com';
-                document.getElementById('env_SMTP_PORT').value = '587';
-            } else if (provider === 'outlook') {
-                document.getElementById('env_SMTP_SERVER').value = 'smtp.office365.com';
-                document.getElementById('env_SMTP_PORT').value = '587';
+        function toggleModalAlertSections() {
+            const method = document.getElementById('modalAlertMethod')?.value || 'NONE';
+            const smtpSec = document.getElementById('modalSmtpSection');
+            const teleSec = document.getElementById('modalTelegramSection');
+
+            if (smtpSec) {
+                if (method === 'SMTP' || method === 'BOTH') {
+                    smtpSec.classList.remove('hidden');
+                } else {
+                    smtpSec.classList.add('hidden');
+                }
+            }
+
+            if (teleSec) {
+                if (method === 'TELEGRAM' || method === 'BOTH') {
+                    teleSec.classList.remove('hidden');
+                } else {
+                    teleSec.classList.add('hidden');
+                }
             }
         }
 
-        async function testSmtpConnection() {
-            const btn = document.getElementById('smtpTestBtn');
-            const btnText = document.getElementById('smtpTestBtnText');
-            const resultBox = document.getElementById('smtpTestResult');
-            
+        function applyModalSmtpPreset(provider) {
+            if (provider === 'gmail') {
+                document.getElementById('modalSmtpServer').value = 'smtp.gmail.com';
+                document.getElementById('modalSmtpPort').value = '587';
+            } else if (provider === 'outlook') {
+                document.getElementById('modalSmtpServer').value = 'smtp.office365.com';
+                document.getElementById('modalSmtpPort').value = '587';
+            }
+        }
+
+        async function testModalSmtpConnection() {
+            const selectEl = document.getElementById('settingsProfileSelect');
+            const profileId = selectEl ? selectEl.value : 0;
+            const btn = document.getElementById('modalSmtpTestBtn');
+            const btnText = document.getElementById('modalSmtpTestBtnText');
+            const resultBox = document.getElementById('modalSmtpTestResult');
+
+            if (!btn || !resultBox) return;
+
             btn.classList.add('opacity-75', 'cursor-not-allowed');
             btnText.innerText = "Testing SMTP...";
             resultBox.classList.add('hidden');
-            
+
             const formData = new FormData();
-            formData.append('SMTP_SERVER', document.getElementById('env_SMTP_SERVER').value);
-            formData.append('SMTP_PORT', document.getElementById('env_SMTP_PORT').value);
-            formData.append('SMTP_USER', document.getElementById('env_SMTP_USER').value);
-            formData.append('SMTP_PASS', document.getElementById('env_SMTP_PASS').value);
-            formData.append('ALERT_RECIPIENT', document.getElementById('env_ALERT_RECIPIENT').value);
+            formData.append('id', profileId);
+            formData.append('smtp_server', document.getElementById('modalSmtpServer').value || '');
+            formData.append('smtp_port', document.getElementById('modalSmtpPort').value || '587');
+            formData.append('smtp_user', document.getElementById('modalSmtpUser').value || '');
+            formData.append('smtp_pass', document.getElementById('modalSmtpPass').value || '');
+            formData.append('alert_recipient', document.getElementById('modalAlertRecipient').value || '');
 
             try {
-                const res = await fetch('/api/test-smtp', {
+                const res = await fetch('/api/test-profile-smtp', {
                     method: 'POST',
                     body: formData
                 });
                 const json = await res.json();
-                
+
                 resultBox.classList.remove('hidden', 'bg-red-900/40', 'border-red-500/40', 'text-red-300', 'bg-green-900/40', 'border-green-500/40', 'text-green-300');
                 if (json.success) {
                     resultBox.classList.add('bg-green-900/40', 'border', 'border-green-500/40', 'text-green-300');
                     resultBox.innerText = "✅ " + json.message;
                 } else {
                     resultBox.classList.add('bg-red-900/40', 'border', 'border-red-500/40', 'text-red-300');
-                    resultBox.innerText = "❌ SMTP Error: " + json.error;
+                    resultBox.innerText = "❌ SMTP Error: " + (json.error || json.message);
                 }
             } catch (e) {
                 resultBox.classList.remove('hidden');
@@ -1082,18 +1332,76 @@
                 resultBox.innerText = "❌ Connection test request failed.";
             } finally {
                 btn.classList.remove('opacity-75', 'cursor-not-allowed');
-                btnText.innerText = "Test SMTP Connection";
+                btnText.innerText = "⚡ Test SMTP Connection";
             }
         }
 
-        async function saveEnvSettings(e) {
-            e.preventDefault();
-            const form = e.target;
-            const formData = new FormData(form);
-            const msg = document.getElementById('envFormMsg');
-            
+        async function testModalTelegramConnection() {
+            const selectEl = document.getElementById('settingsProfileSelect');
+            const profileId = selectEl ? selectEl.value : 0;
+            const btn = document.getElementById('modalTelegramTestBtn');
+            const btnText = document.getElementById('modalTelegramTestBtnText');
+            const resultBox = document.getElementById('modalTelegramTestResult');
+
+            if (!btn || !resultBox) return;
+
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
+            btnText.innerText = "Testing Telegram...";
+            resultBox.classList.add('hidden');
+
+            const formData = new FormData();
+            formData.append('id', profileId);
+            formData.append('telegram_bot_token', document.getElementById('modalTelegramBotToken').value || '');
+            formData.append('telegram_chat_id', document.getElementById('modalTelegramChatId').value || '');
+
             try {
-                const res = await fetch('/api/env-config', {
+                const res = await fetch('/api/test-profile-telegram', {
+                    method: 'POST',
+                    body: formData
+                });
+                const json = await res.json();
+
+                resultBox.classList.remove('hidden', 'bg-red-900/40', 'border-red-500/40', 'text-red-300', 'bg-green-900/40', 'border-green-500/40', 'text-green-300');
+                if (json.success) {
+                    resultBox.classList.add('bg-green-900/40', 'border', 'border-green-500/40', 'text-green-300');
+                    resultBox.innerText = "✅ " + json.message;
+                } else {
+                    resultBox.classList.add('bg-red-900/40', 'border', 'border-red-500/40', 'text-red-300');
+                    resultBox.innerText = "❌ Telegram Error: " + (json.error || json.message);
+                }
+            } catch (e) {
+                resultBox.classList.remove('hidden');
+                resultBox.classList.add('bg-red-900/40', 'border', 'border-red-500/40', 'text-red-300');
+                resultBox.innerText = "❌ Connection test request failed.";
+            } finally {
+                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+                btnText.innerText = "⚡ Test Telegram Connection";
+            }
+        }
+
+        async function saveModalSettings(e) {
+            e.preventDefault();
+            const selectEl = document.getElementById('settingsProfileSelect');
+            const profileId = selectEl ? selectEl.value : 0;
+            if (!profileId || profileId == 0) {
+                alert("Please select a tracking profile first.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('id', profileId);
+            formData.append('alert_method', document.getElementById('modalAlertMethod').value || 'NONE');
+            formData.append('smtp_server', document.getElementById('modalSmtpServer').value || '');
+            formData.append('smtp_port', document.getElementById('modalSmtpPort').value || '587');
+            formData.append('smtp_user', document.getElementById('modalSmtpUser').value || '');
+            formData.append('smtp_pass', document.getElementById('modalSmtpPass').value || '');
+            formData.append('alert_recipient', document.getElementById('modalAlertRecipient').value || '');
+            formData.append('telegram_bot_token', document.getElementById('modalTelegramBotToken').value || '');
+            formData.append('telegram_chat_id', document.getElementById('modalTelegramChatId').value || '');
+
+            const msg = document.getElementById('modalFormMsg');
+            try {
+                const res = await fetch('/api/save-alert-settings', {
                     method: 'POST',
                     body: formData
                 });
@@ -1102,11 +1410,18 @@
                     msg.innerText = "✅ " + json.message;
                     msg.classList.remove('hidden');
                     setTimeout(() => msg.classList.add('hidden'), 3500);
+
+                    // Refresh profiles list and sync left sidebar form if editing current profile
+                    await loadProfiles();
+                    if (currentConfigId == profileId) {
+                        const updated = allProfilesCache.find(p => p.id == profileId);
+                        if (updated) loadProfileData(updated);
+                    }
                 } else {
-                    alert("Error saving settings: " + json.error);
+                    alert("Error saving profile alert settings: " + json.error);
                 }
             } catch (err) {
-                alert("Request failed to save settings");
+                alert("Request failed to save alert settings");
             }
         }
 
