@@ -1,5 +1,6 @@
 package com.flighttracker.entity;
 
+import com.flighttracker.util.AppConstants;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,20 +26,20 @@ public class SearchConfig {
     private Integer budgetThreshold;
 
     @Column(name = "flight_type", length = 20)
-    private String flightType = "ALL";
+    private String flightType = AppConstants.FLIGHT_TYPE_ALL;
 
     @Column(name = "active", nullable = false)
     private Integer active = 1;
 
     // Per-Profile Alert Notification Settings
     @Column(name = "alert_method", length = 20)
-    private String alertMethod = "NONE"; // NONE, SMTP, TELEGRAM, BOTH
+    private String alertMethod = AppConstants.ALERT_METHOD_NONE; // NONE, SMTP, TELEGRAM, BOTH
 
     @Column(name = "smtp_server", length = 100)
     private String smtpServer;
 
     @Column(name = "smtp_port")
-    private Integer smtpPort = 587;
+    private Integer smtpPort = AppConstants.DEFAULT_SMTP_PORT;
 
     @Column(name = "smtp_user", length = 100)
     private String smtpUser;
@@ -68,7 +69,7 @@ public class SearchConfig {
         this.arrivalCity = arrivalCity;
         this.preferredDate = preferredDate;
         this.budgetThreshold = budgetThreshold;
-        this.flightType = flightType != null ? flightType : "ALL";
+        this.flightType = flightType != null ? flightType : AppConstants.FLIGHT_TYPE_ALL;
         this.active = active != null ? active : 1;
     }
 
@@ -94,7 +95,7 @@ public class SearchConfig {
     public Integer getActive() { return active; }
     public void setActive(Integer active) { this.active = active; }
 
-    public String getAlertMethod() { return alertMethod != null ? alertMethod : "NONE"; }
+    public String getAlertMethod() { return alertMethod != null ? alertMethod : AppConstants.ALERT_METHOD_NONE; }
     public void setAlertMethod(String alertMethod) { this.alertMethod = alertMethod; }
 
     public String getSmtpServer() { return smtpServer; }

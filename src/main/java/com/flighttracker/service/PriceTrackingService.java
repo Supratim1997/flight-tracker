@@ -6,6 +6,7 @@ import com.flighttracker.entity.SearchConfig;
 import com.flighttracker.repository.PriceAccessLogRepository;
 import com.flighttracker.repository.PriceHistoryRepository;
 import com.flighttracker.repository.SearchConfigRepository;
+import com.flighttracker.util.AppConstants;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,7 +71,7 @@ public class PriceTrackingService {
                 PriceHistory savedHistory = historyRepository.save(history);
 
                 PriceAccessLog accessLog = new PriceAccessLog(
-                        config, f.flightNumber, currentDate, f.airline, "Google Flights Live Stream",
+                        config, f.flightNumber, currentDate, f.airline, AppConstants.SCRAPER_SOURCE_NAME,
                         f.sourceUrl, f.price
                 );
                 accessLogRepository.save(accessLog);

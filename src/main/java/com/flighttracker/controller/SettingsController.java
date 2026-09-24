@@ -1,5 +1,6 @@
 package com.flighttracker.controller;
 
+import com.flighttracker.util.AppConstants;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
@@ -36,30 +37,30 @@ public class SettingsController {
         Map<String, Object> response = new HashMap<>();
         Map<String, String> data = new HashMap<>();
 
-        data.put("SMTP_SERVER", smtpHost);
-        data.put("SMTP_PORT", smtpPort);
-        data.put("SMTP_USER", smtpUser);
-        data.put("SMTP_PASS", "••••••••");
-        data.put("ALERT_RECIPIENT", alertRecipient);
+        data.put(AppConstants.PARAM_SMTP_SERVER, smtpHost);
+        data.put(AppConstants.PARAM_SMTP_PORT, smtpPort);
+        data.put(AppConstants.PARAM_SMTP_USER, smtpUser);
+        data.put(AppConstants.PARAM_SMTP_PASS, AppConstants.MASKED_PASSWORD);
+        data.put(AppConstants.PARAM_ALERT_RECIPIENT, alertRecipient);
 
-        response.put("success", true);
-        response.put("data", data);
+        response.put(AppConstants.KEY_SUCCESS, true);
+        response.put(AppConstants.KEY_DATA, data);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/env-config")
     public ResponseEntity<Map<String, Object>> saveEnvConfig(@RequestParam Map<String, String> params) {
         Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("message", "Settings updated for active Spring session!");
+        response.put(AppConstants.KEY_SUCCESS, true);
+        response.put(AppConstants.KEY_MESSAGE, "Settings updated for active Spring session!");
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/test-smtp")
     public ResponseEntity<Map<String, Object>> testSmtp(@RequestParam Map<String, String> params) {
         Map<String, Object> response = new HashMap<>();
-        String user = params.getOrDefault("SMTP_USER", smtpUser);
-        String recipient = params.getOrDefault("ALERT_RECIPIENT", alertRecipient);
+        String user = params.getOrDefault(AppConstants.PARAM_SMTP_USER, smtpUser);
+        String recipient = params.getOrDefault(AppConstants.PARAM_ALERT_RECIPIENT, alertRecipient);
 
         try {
             SimpleMailMessage msg = new SimpleMailMessage();
@@ -70,12 +71,12 @@ public class SettingsController {
 
             mailSender.send(msg);
 
-            response.put("success", true);
-            response.put("message", "SMTP Connection successful! Test email delivered to " + recipient);
+            response.put(AppConstants.KEY_SUCCESS, true);
+            response.put(AppConstants.KEY_MESSAGE, "SMTP Connection successful! Test email delivered to " + recipient);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
+            response.put(AppConstants.KEY_SUCCESS, false);
+            response.put(AppConstants.KEY_ERROR, e.getMessage());
             return ResponseEntity.status(500).body(response);
         }
     }

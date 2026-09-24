@@ -3,6 +3,7 @@ package com.flighttracker.controller;
 import com.flighttracker.entity.SearchConfig;
 import com.flighttracker.repository.SearchConfigRepository;
 import com.flighttracker.service.AlertService;
+import com.flighttracker.util.AppConstants;
 import com.flighttracker.util.EncryptionUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -35,30 +36,30 @@ public class ConfigController {
             List<Map<String, Object>> resultList = new ArrayList<>();
             for (SearchConfig c : configs) {
                 Map<String, Object> map = new HashMap<>();
-                map.put("id", c.getId());
+                map.put(AppConstants.KEY_ID, c.getId());
                 map.put("departureCity", c.getDepartureCity());
                 map.put("arrivalCity", c.getArrivalCity());
                 map.put("preferredDate", c.getPreferredDate());
                 map.put("budgetThreshold", c.getBudgetThreshold());
                 map.put("flightType", c.getFlightType());
                 map.put("active", c.getActive());
-                map.put("alertMethod", c.getAlertMethod());
-                map.put("smtpServer", c.getSmtpServer());
-                map.put("smtpPort", c.getSmtpPort());
-                map.put("smtpUser", c.getSmtpUser());
-                map.put("alertRecipient", c.getAlertRecipient());
-                map.put("telegramChatId", c.getTelegramChatId());
-                map.put("hasSmtpPass", c.getSmtpPassEncrypted() != null && !c.getSmtpPassEncrypted().isEmpty());
-                map.put("hasTelegramToken", c.getTelegramBotTokenEncrypted() != null && !c.getTelegramBotTokenEncrypted().isEmpty());
+                map.put(AppConstants.KEY_ALERT_METHOD, c.getAlertMethod());
+                map.put(AppConstants.KEY_SMTP_SERVER, c.getSmtpServer());
+                map.put(AppConstants.KEY_SMTP_PORT, c.getSmtpPort());
+                map.put(AppConstants.KEY_SMTP_USER, c.getSmtpUser());
+                map.put(AppConstants.KEY_ALERT_RECIPIENT_CAMEL, c.getAlertRecipient());
+                map.put(AppConstants.KEY_TELEGRAM_CHAT_ID, c.getTelegramChatId());
+                map.put(AppConstants.KEY_HAS_SMTP_PASS, c.getSmtpPassEncrypted() != null && !c.getSmtpPassEncrypted().isEmpty());
+                map.put(AppConstants.KEY_HAS_TELEGRAM_TOKEN, c.getTelegramBotTokenEncrypted() != null && !c.getTelegramBotTokenEncrypted().isEmpty());
                 resultList.add(map);
             }
 
-            response.put("success", true);
-            response.put("data", resultList);
+            response.put(AppConstants.KEY_SUCCESS, true);
+            response.put(AppConstants.KEY_DATA, resultList);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
+            response.put(AppConstants.KEY_SUCCESS, false);
+            response.put(AppConstants.KEY_ERROR, e.getMessage());
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -96,7 +97,7 @@ public class ConfigController {
             config.setBudgetThreshold(budgetThreshold);
             config.setFlightType(flightType);
             config.setActive(active);
-            config.setAlertMethod(alertMethod != null ? alertMethod : "NONE");
+            config.setAlertMethod(alertMethod != null ? alertMethod : AppConstants.ALERT_METHOD_NONE);
 
             if (smtpServer != null) config.setSmtpServer(smtpServer.trim());
             if (smtpPort != null) config.setSmtpPort(smtpPort);
@@ -104,24 +105,24 @@ public class ConfigController {
             if (alertRecipient != null) config.setAlertRecipient(alertRecipient.trim());
 
             // Encrypt password if provided (or keep existing if blank during edit)
-            if (smtpPass != null && !smtpPass.trim().isEmpty() && !smtpPass.equals("••••••••")) {
+            if (smtpPass != null && !smtpPass.trim().isEmpty() && !smtpPass.equals(AppConstants.MASKED_PASSWORD)) {
                 config.setSmtpPassEncrypted(EncryptionUtil.encrypt(smtpPass.trim(), secretKey));
             }
 
             if (telegramChatId != null) config.setTelegramChatId(telegramChatId.trim());
 
             // Encrypt Telegram token if provided (or keep existing if blank during edit)
-            if (telegramBotToken != null && !telegramBotToken.trim().isEmpty() && !telegramBotToken.equals("••••••••")) {
+            if (telegramBotToken != null && !telegramBotToken.trim().isEmpty() && !telegramBotToken.equals(AppConstants.MASKED_PASSWORD)) {
                 config.setTelegramBotTokenEncrypted(EncryptionUtil.encrypt(telegramBotToken.trim(), secretKey));
             }
 
             SearchConfig saved = configRepository.save(config);
-            response.put("success", true);
-            response.put("id", saved.getId());
+            response.put(AppConstants.KEY_SUCCESS, true);
+            response.put(AppConstants.KEY_ID, saved.getId());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
+            response.put(AppConstants.KEY_SUCCESS, false);
+            response.put(AppConstants.KEY_ERROR, e.getMessage());
             return ResponseEntity.status(400).body(response);
         }
     }
@@ -136,7 +137,7 @@ public class ConfigController {
             @RequestParam(value = "alert_recipient", required = false) String alertRecipient) {
 
         String passToUse = smtpPass;
-        if ((passToUse == null || passToUse.trim().isEmpty() || passToUse.equals("••••••••")) && id != null && id > 0) {
+        if ((passToUse == null || passToUse.trim().isEmpty() || passToUse.equals(AppConstants.MASKED_PASSWORD)) && id != null && id > 0) {
             Optional<SearchConfig> opt = configRepository.findById(id);
             if (opt.isPresent() && opt.get().getSmtpPassEncrypted() != null) {
                 passToUse = EncryptionUtil.decrypt(opt.get().getSmtpPassEncrypted(), secretKey);
@@ -154,7 +155,7 @@ public class ConfigController {
             @RequestParam(value = "telegram_chat_id", required = false) String telegramChatId) {
 
         String tokenToUse = telegramBotToken;
-        if ((tokenToUse == null || tokenToUse.trim().isEmpty() || tokenToUse.equals("••••••••")) && id != null && id > 0) {
+        if ((tokenToUse == null || tokenToUse.trim().isEmpty() || tokenToUse.equals(AppConstants.MASKED_PASSWORD)) && id != null && id > 0) {
             Optional<SearchConfig> opt = configRepository.findById(id);
             if (opt.isPresent() && opt.get().getTelegramBotTokenEncrypted() != null) {
                 tokenToUse = EncryptionUtil.decrypt(opt.get().getTelegramBotTokenEncrypted(), secretKey);
@@ -182,29 +183,29 @@ public class ConfigController {
             SearchConfig config = configRepository.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Profile with ID " + id + " not found."));
 
-            config.setAlertMethod(alertMethod != null ? alertMethod : "NONE");
+            config.setAlertMethod(alertMethod != null ? alertMethod : AppConstants.ALERT_METHOD_NONE);
             if (smtpServer != null) config.setSmtpServer(smtpServer.trim());
             if (smtpPort != null) config.setSmtpPort(smtpPort);
             if (smtpUser != null) config.setSmtpUser(smtpUser.trim());
             if (alertRecipient != null) config.setAlertRecipient(alertRecipient.trim());
 
-            if (smtpPass != null && !smtpPass.trim().isEmpty() && !smtpPass.equals("••••••••")) {
+            if (smtpPass != null && !smtpPass.trim().isEmpty() && !smtpPass.equals(AppConstants.MASKED_PASSWORD)) {
                 config.setSmtpPassEncrypted(EncryptionUtil.encrypt(smtpPass.trim(), secretKey));
             }
 
             if (telegramChatId != null) config.setTelegramChatId(telegramChatId.trim());
 
-            if (telegramBotToken != null && !telegramBotToken.trim().isEmpty() && !telegramBotToken.equals("••••••••")) {
+            if (telegramBotToken != null && !telegramBotToken.trim().isEmpty() && !telegramBotToken.equals(AppConstants.MASKED_PASSWORD)) {
                 config.setTelegramBotTokenEncrypted(EncryptionUtil.encrypt(telegramBotToken.trim(), secretKey));
             }
 
             configRepository.save(config);
-            response.put("success", true);
-            response.put("message", "Alert settings updated for profile #" + id);
+            response.put(AppConstants.KEY_SUCCESS, true);
+            response.put(AppConstants.KEY_MESSAGE, "Alert settings updated for profile #" + id);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
+            response.put(AppConstants.KEY_SUCCESS, false);
+            response.put(AppConstants.KEY_ERROR, e.getMessage());
             return ResponseEntity.status(400).body(response);
         }
     }
@@ -214,11 +215,11 @@ public class ConfigController {
         Map<String, Object> response = new HashMap<>();
         try {
             configRepository.deleteById(id);
-            response.put("success", true);
+            response.put(AppConstants.KEY_SUCCESS, true);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
+            response.put(AppConstants.KEY_SUCCESS, false);
+            response.put(AppConstants.KEY_ERROR, e.getMessage());
             return ResponseEntity.status(500).body(response);
         }
     }

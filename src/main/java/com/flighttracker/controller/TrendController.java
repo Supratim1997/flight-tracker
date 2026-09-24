@@ -4,6 +4,7 @@ import com.flighttracker.entity.PriceHistory;
 import com.flighttracker.entity.SearchConfig;
 import com.flighttracker.repository.PriceHistoryRepository;
 import com.flighttracker.repository.SearchConfigRepository;
+import com.flighttracker.util.AppConstants;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,16 +26,16 @@ public class TrendController {
     public ResponseEntity<Map<String, Object>> getTrendData(@RequestParam("config_id") Long configId) {
         Map<String, Object> response = new HashMap<>();
         if (configId == null || configId <= 0) {
-            response.put("success", false);
-            response.put("error", "Invalid config ID");
+            response.put(AppConstants.KEY_SUCCESS, false);
+            response.put(AppConstants.KEY_ERROR, "Invalid config ID");
             return ResponseEntity.badRequest().body(response);
         }
 
         try {
             Optional<SearchConfig> configOpt = configRepository.findById(configId);
             if (configOpt.isEmpty()) {
-                response.put("success", false);
-                response.put("error", "Config not found");
+                response.put(AppConstants.KEY_SUCCESS, false);
+                response.put(AppConstants.KEY_ERROR, "Config not found");
                 return ResponseEntity.status(404).body(response);
             }
 
@@ -46,16 +47,16 @@ public class TrendController {
             List<Map<String, Object>> formattedData = new ArrayList<>();
             for (PriceHistory ph : history) {
                 Map<String, Object> item = new HashMap<>();
-                item.put("id", ph.getId());
-                item.put("flight_date", ph.getFlightDate().toString());
-                item.put("min_price", ph.getPriceInr().doubleValue());
-                item.put("airline", ph.getAirline());
-                item.put("flight_number", ph.getFlightNumber());
-                item.put("departure_time", ph.getDepartureTime().toString());
-                item.put("arrival_time", ph.getArrivalTime().toString());
-                item.put("is_direct", ph.getIsDirect() ? 1 : 0);
-                item.put("stops_info", ph.getStopsInfo());
-                item.put("source_url", ph.getSourceUrl());
+                item.put(AppConstants.KEY_ID, ph.getId());
+                item.put(AppConstants.KEY_FLIGHT_DATE, ph.getFlightDate().toString());
+                item.put(AppConstants.KEY_MIN_PRICE, ph.getPriceInr().doubleValue());
+                item.put(AppConstants.KEY_AIRLINE, ph.getAirline());
+                item.put(AppConstants.KEY_FLIGHT_NUMBER, ph.getFlightNumber());
+                item.put(AppConstants.KEY_DEPARTURE_TIME, ph.getDepartureTime().toString());
+                item.put(AppConstants.KEY_ARRIVAL_TIME, ph.getArrivalTime().toString());
+                item.put(AppConstants.KEY_IS_DIRECT, ph.getIsDirect() ? 1 : 0);
+                item.put(AppConstants.KEY_STOPS_INFO, ph.getStopsInfo());
+                item.put(AppConstants.KEY_SOURCE_URL, ph.getSourceUrl());
                 formattedData.add(item);
             }
 
@@ -63,24 +64,24 @@ public class TrendController {
             List<Map<String, Object>> formattedDailyMin = new ArrayList<>();
             for (Map<String, Object> dm : dailyMin) {
                 Map<String, Object> item = new HashMap<>();
-                item.put("flight_date", dm.get("flightDate").toString());
-                item.put("min_price", dm.get("minPrice"));
+                item.put(AppConstants.KEY_FLIGHT_DATE, dm.get(AppConstants.MAP_KEY_FLIGHT_DATE).toString());
+                item.put(AppConstants.KEY_MIN_PRICE, dm.get(AppConstants.MAP_KEY_MIN_PRICE));
                 formattedDailyMin.add(item);
             }
 
-            response.put("success", true);
-            response.put("data", formattedData);
-            response.put("daily_min", formattedDailyMin);
-            response.put("departure_city", config.getDepartureCity());
-            response.put("arrival_city", config.getArrivalCity());
-            response.put("budget_threshold", config.getBudgetThreshold());
-            response.put("preferred_date", config.getPreferredDate().toString());
-            response.put("flight_type", config.getFlightType());
+            response.put(AppConstants.KEY_SUCCESS, true);
+            response.put(AppConstants.KEY_DATA, formattedData);
+            response.put(AppConstants.KEY_DAILY_MIN, formattedDailyMin);
+            response.put(AppConstants.KEY_DEPARTURE_CITY, config.getDepartureCity());
+            response.put(AppConstants.KEY_ARRIVAL_CITY, config.getArrivalCity());
+            response.put(AppConstants.KEY_BUDGET_THRESHOLD, config.getBudgetThreshold());
+            response.put(AppConstants.KEY_PREFERRED_DATE, config.getPreferredDate().toString());
+            response.put(AppConstants.KEY_FLIGHT_TYPE, config.getFlightType());
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
+            response.put(AppConstants.KEY_SUCCESS, false);
+            response.put(AppConstants.KEY_ERROR, e.getMessage());
             return ResponseEntity.status(500).body(response);
         }
     }

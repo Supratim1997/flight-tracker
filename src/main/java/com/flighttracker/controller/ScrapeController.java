@@ -1,6 +1,7 @@
 package com.flighttracker.controller;
 
 import com.flighttracker.service.PriceTrackingService;
+import com.flighttracker.util.AppConstants;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,12 +25,12 @@ public class ScrapeController {
         Map<String, Object> response = new HashMap<>();
         try {
             priceTrackingService.runFullScrapeCheck();
-            response.put("success", true);
-            response.put("output", "Manual scrape completed successfully via Spring Boot engine.");
+            response.put(AppConstants.KEY_SUCCESS, true);
+            response.put(AppConstants.KEY_OUTPUT, "Manual scrape completed successfully via Spring Boot engine.");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
+            response.put(AppConstants.KEY_SUCCESS, false);
+            response.put(AppConstants.KEY_ERROR, e.getMessage());
             return ResponseEntity.status(500).body(response);
         }
     }

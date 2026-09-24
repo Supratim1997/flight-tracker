@@ -2,6 +2,7 @@ package com.flighttracker.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flighttracker.util.AppConstants;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -55,20 +56,20 @@ public class FlightScraperService {
 
     public List<ScrapedFlight> scrapeGoogleFlights(String dep, String arr, LocalDate flightDate, String flightType) {
         String stopsParam = "";
-        if ("DIRECT".equalsIgnoreCase(flightType)) {
+        if (AppConstants.FLIGHT_TYPE_DIRECT.equalsIgnoreCase(flightType)) {
             stopsParam = "&stops=0";
-        } else if ("LAYOVER".equalsIgnoreCase(flightType)) {
+        } else if (AppConstants.FLIGHT_TYPE_LAYOVER.equalsIgnoreCase(flightType)) {
             stopsParam = "&stops=1";
         }
 
         String queryStr = "one-way flights from " + dep.toUpperCase() + " to " + arr.toUpperCase() + " on " + flightDate.toString();
-        String url = "https://www.google.com/travel/flights?q=" + URLEncoder.encode(queryStr, StandardCharsets.UTF_8) + "&curr=INR" + stopsParam;
+        String url = AppConstants.GOOGLE_FLIGHTS_SEARCH_URL + URLEncoder.encode(queryStr, StandardCharsets.UTF_8) + "&curr=INR" + stopsParam;
 
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
-                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-                    .header("Accept-Language", "en-IN,en;q=0.9")
+                    .header("User-Agent", AppConstants.SCRAPER_USER_AGENT)
+                    .header("Accept-Language", AppConstants.SCRAPER_ACCEPT_LANGUAGE)
                     .timeout(Duration.ofSeconds(12))
                     .GET()
                     .build();
@@ -170,14 +171,14 @@ public class FlightScraperService {
                 // Stops info
                 String stopsInfo;
                 if (isDirect) {
-                    stopsInfo = "Direct";
+                    stopsInfo = AppConstants.DIRECT_STOPS_TEXT;
                 } else {
                     String viaCity = (firstLeg.size() > 6 && firstLeg.get(6).isTextual()) ? firstLeg.get(6).asText() : "Layover";
                     stopsInfo = (numLegs - 1) + " Stop (" + viaCity + ")";
                 }
 
-                if ("DIRECT".equalsIgnoreCase(flightType) && !isDirect) continue;
-                if ("LAYOVER".equalsIgnoreCase(flightType) && isDirect) continue;
+                if (AppConstants.FLIGHT_TYPE_DIRECT.equalsIgnoreCase(flightType) && !isDirect) continue;
+                if (AppConstants.FLIGHT_TYPE_LAYOVER.equalsIgnoreCase(flightType) && isDirect) continue;
 
                 String key = airline + "|" + flightNum + "|" + depTime + "|" + priceVal;
                 if (!seenKeys.contains(key)) {

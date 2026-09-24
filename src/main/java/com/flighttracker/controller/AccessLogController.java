@@ -2,6 +2,7 @@ package com.flighttracker.controller;
 
 import com.flighttracker.entity.PriceAccessLog;
 import com.flighttracker.repository.PriceAccessLogRepository;
+import com.flighttracker.util.AppConstants;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,26 +32,26 @@ public class AccessLogController {
             List<Map<String, Object>> formatted = new ArrayList<>();
             for (PriceAccessLog log : logs) {
                 Map<String, Object> item = new HashMap<>();
-                item.put("id", log.getId());
-                item.put("config_id", log.getSearchConfig().getId());
-                item.put("flight_number", log.getFlightNumber());
-                item.put("flight_date", log.getFlightDate().toString());
-                item.put("airline", log.getAirline());
-                item.put("source_name", log.getSourceName());
-                item.put("accessed_url", log.getAccessedUrl());
-                item.put("price_received", log.getPriceReceived().doubleValue());
-                item.put("accessed_at", log.getAccessedAt().toString());
-                item.put("departure_city", log.getSearchConfig().getDepartureCity());
-                item.put("arrival_city", log.getSearchConfig().getArrivalCity());
+                item.put(AppConstants.KEY_ID, log.getId());
+                item.put(AppConstants.KEY_CONFIG_ID, log.getSearchConfig().getId());
+                item.put(AppConstants.KEY_FLIGHT_NUMBER, log.getFlightNumber());
+                item.put(AppConstants.KEY_FLIGHT_DATE, log.getFlightDate().toString());
+                item.put(AppConstants.KEY_AIRLINE, log.getAirline());
+                item.put(AppConstants.KEY_SOURCE_NAME, log.getSourceName());
+                item.put(AppConstants.KEY_ACCESSED_URL, log.getAccessedUrl());
+                item.put(AppConstants.KEY_PRICE_RECEIVED, log.getPriceReceived().doubleValue());
+                item.put(AppConstants.KEY_ACCESSED_AT, log.getAccessedAt().toString());
+                item.put(AppConstants.KEY_DEPARTURE_CITY, log.getSearchConfig().getDepartureCity());
+                item.put(AppConstants.KEY_ARRIVAL_CITY, log.getSearchConfig().getArrivalCity());
                 formatted.add(item);
             }
 
-            response.put("success", true);
-            response.put("data", formatted);
+            response.put(AppConstants.KEY_SUCCESS, true);
+            response.put(AppConstants.KEY_DATA, formatted);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
+            response.put(AppConstants.KEY_SUCCESS, false);
+            response.put(AppConstants.KEY_ERROR, e.getMessage());
             return ResponseEntity.status(500).body(response);
         }
     }

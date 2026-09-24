@@ -4,6 +4,7 @@ import com.flighttracker.entity.AlertLog;
 import com.flighttracker.entity.PriceHistory;
 import com.flighttracker.entity.SearchConfig;
 import com.flighttracker.repository.AlertLogRepository;
+import com.flighttracker.util.AppConstants;
 import com.flighttracker.util.EncryptionUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -57,7 +58,7 @@ public class AlertService {
 
     public void processPriceAlert(SearchConfig config, PriceHistory flight) {
         String method = config.getAlertMethod();
-        if ("NONE".equalsIgnoreCase(method)) {
+        if (AppConstants.ALERT_METHOD_NONE.equalsIgnoreCase(method)) {
             // User requested dashboard-only tracking without alerts
             return;
         }
@@ -76,11 +77,11 @@ public class AlertService {
                 AlertLog log = new AlertLog(config, flight, method.toUpperCase(), alertMsg, flight.getPriceInr());
                 alertLogRepository.save(log);
 
-                if ("SMTP".equalsIgnoreCase(method) || "BOTH".equalsIgnoreCase(method)) {
+                if (AppConstants.ALERT_METHOD_SMTP.equalsIgnoreCase(method) || AppConstants.ALERT_METHOD_BOTH.equalsIgnoreCase(method)) {
                     sendEmailAlert(config, flight);
                 }
 
-                if ("TELEGRAM".equalsIgnoreCase(method) || "BOTH".equalsIgnoreCase(method)) {
+                if (AppConstants.ALERT_METHOD_TELEGRAM.equalsIgnoreCase(method) || AppConstants.ALERT_METHOD_BOTH.equalsIgnoreCase(method)) {
                     sendTelegramAlert(config, flight);
                 }
             } else {
@@ -110,14 +111,14 @@ public class AlertService {
             mailSender.setPassword(rawPass);
 
             Properties props = mailSender.getJavaMailProperties();
-            props.put("mail.transport.protocol", "smtp");
-            props.put("mail.smtp.auth", "true");
-            props.put("mail.smtp.starttls.enable", "true");
-            props.put("mail.smtp.timeout", "5000");
-            props.put("mail.smtp.connectiontimeout", "5000");
+            props.put(AppConstants.MAIL_TRANSPORT_PROTOCOL, AppConstants.MAIL_TRANSPORT_PROTOCOL);
+            props.put(AppConstants.MAIL_SMTP_AUTH, "true");
+            props.put(AppConstants.MAIL_SMTP_STARTTLS, "true");
+            props.put(AppConstants.MAIL_SMTP_TIMEOUT, AppConstants.DEFAULT_MAIL_TIMEOUT_MS);
+            props.put(AppConstants.MAIL_SMTP_CONN_TIMEOUT, AppConstants.DEFAULT_MAIL_TIMEOUT_MS);
 
             String bookingUrl = flight.getSourceUrl() != null ? flight.getSourceUrl() :
-                    String.format("https://www.google.com/travel/flights?q=one-way+flights+from+%s+to+%s+on+%s",
+                    String.format(AppConstants.GOOGLE_FLIGHTS_SEARCH_URL + "one-way+flights+from+%s+to+%s+on+%s",
                             config.getDepartureCity(), config.getArrivalCity(), flight.getFlightDate());
 
             SimpleMailMessage mailMessage = new SimpleMailMessage();
@@ -166,7 +167,7 @@ public class AlertService {
             }
 
             String bookingUrl = flight.getSourceUrl() != null ? flight.getSourceUrl() :
-                    String.format("https://www.google.com/travel/flights?q=one-way+flights+from+%s+to+%s+on+%s",
+                    String.format(AppConstants.GOOGLE_FLIGHTS_SEARCH_URL + "one-way+flights+from+%s+to+%s+on+%s",
                             config.getDepartureCity(), config.getArrivalCity(), flight.getFlightDate());
 
             String messageText = String.format("""
@@ -188,10 +189,10 @@ public class AlertService {
                     bookingUrl
             );
 
-            String url = "https://api.telegram.org/bot" + token + "/sendMessage";
+            String url = AppConstants.TELEGRAM_API_BASE_URL + token + AppConstants.TELEGRAM_SEND_MESSAGE_PATH;
             String bodyData = "chat_id=" + URLEncoder.encode(chatId, StandardCharsets.UTF_8)
                     + "&text=" + URLEncoder.encode(messageText, StandardCharsets.UTF_8)
-                    + "&parse_mode=Markdown";
+                    + "&parse_mode=" + AppConstants.TELEGRAM_PARSE_MODE_MARKDOWN;
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
@@ -211,7 +212,7 @@ public class AlertService {
     }
 
     public Map<String, Object> testSmtpConnection(String host, Integer port, String user, String pass, String recipient) {
-        Map<String, Object> res = new java.util.HashMap<>();
+        Map<String, Object> res = new HashMap<>();
         try {
             if (host == null || host.trim().isEmpty()) throw new IllegalArgumentException("SMTP Host is required.");
             if (user == null || user.trim().isEmpty()) throw new IllegalArgumentException("Sender Email is required.");
@@ -220,16 +221,16 @@ public class AlertService {
 
             JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
             mailSender.setHost(host.trim());
-            mailSender.setPort(port != null && port > 0 ? port : 587);
+            mailSender.setPort(port != null && port > 0 ? port : AppConstants.DEFAULT_SMTP_PORT);
             mailSender.setUsername(user.trim());
             mailSender.setPassword(pass.trim());
 
             Properties props = mailSender.getJavaMailProperties();
-            props.put("mail.transport.protocol", "smtp");
-            props.put("mail.smtp.auth", "true");
-            props.put("mail.smtp.starttls.enable", "true");
-            props.put("mail.smtp.timeout", "6000");
-            props.put("mail.smtp.connectiontimeout", "6000");
+            props.put(AppConstants.MAIL_TRANSPORT_PROTOCOL, AppConstants.MAIL_TRANSPORT_PROTOCOL);
+            props.put(AppConstants.MAIL_SMTP_AUTH, "true");
+            props.put(AppConstants.MAIL_SMTP_STARTTLS, "true");
+            props.put(AppConstants.MAIL_SMTP_TIMEOUT, "6000");
+            props.put(AppConstants.MAIL_SMTP_CONN_TIMEOUT, "6000");
 
             SimpleMailMessage mailMessage = new SimpleMailMessage();
             mailMessage.setFrom(user.trim());
@@ -238,27 +239,27 @@ public class AlertService {
             mailMessage.setText("Hello,\n\nThis is a test message from your Flight Tracker system.\nYour SMTP email alert configuration is working correctly! 🎉\n\nServer: " + host + "\nUser: " + user);
 
             mailSender.send(mailMessage);
-            res.put("success", true);
-            res.put("message", "SMTP test email delivered successfully to " + recipient + "!");
+            res.put(AppConstants.KEY_SUCCESS, true);
+            res.put(AppConstants.KEY_MESSAGE, "SMTP test email delivered successfully to " + recipient + "!");
         } catch (Exception e) {
-            res.put("success", false);
-            res.put("error", e.getMessage() != null ? e.getMessage() : e.toString());
+            res.put(AppConstants.KEY_SUCCESS, false);
+            res.put(AppConstants.KEY_ERROR, e.getMessage() != null ? e.getMessage() : e.toString());
         }
         return res;
     }
 
     public Map<String, Object> testTelegramConnection(String botToken, String chatId) {
-        Map<String, Object> res = new java.util.HashMap<>();
+        Map<String, Object> res = new HashMap<>();
         try {
             if (botToken == null || botToken.trim().isEmpty()) throw new IllegalArgumentException("Telegram Bot Token is required.");
             if (chatId == null || chatId.trim().isEmpty()) throw new IllegalArgumentException("Telegram Chat ID is required.");
 
             String messageText = "✈️ *Flight Tracker - Telegram Connection Test*\n\nYour Telegram bot configuration is working correctly! 🎉";
 
-            String url = "https://api.telegram.org/bot" + botToken.trim() + "/sendMessage";
+            String url = AppConstants.TELEGRAM_API_BASE_URL + botToken.trim() + AppConstants.TELEGRAM_SEND_MESSAGE_PATH;
             String bodyData = "chat_id=" + URLEncoder.encode(chatId.trim(), StandardCharsets.UTF_8)
                     + "&text=" + URLEncoder.encode(messageText, StandardCharsets.UTF_8)
-                    + "&parse_mode=Markdown";
+                    + "&parse_mode=" + AppConstants.TELEGRAM_PARSE_MODE_MARKDOWN;
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
@@ -269,15 +270,15 @@ public class AlertService {
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200 && response.body().contains("\"ok\":true")) {
-                res.put("success", true);
-                res.put("message", "Telegram test message sent successfully to Chat ID: " + chatId);
+                res.put(AppConstants.KEY_SUCCESS, true);
+                res.put(AppConstants.KEY_MESSAGE, "Telegram test message sent successfully to Chat ID: " + chatId);
             } else {
-                res.put("success", false);
-                res.put("error", "Telegram API returned status " + response.statusCode() + ": " + response.body());
+                res.put(AppConstants.KEY_SUCCESS, false);
+                res.put(AppConstants.KEY_ERROR, "Telegram API returned status " + response.statusCode() + ": " + response.body());
             }
         } catch (Exception e) {
-            res.put("success", false);
-            res.put("error", e.getMessage() != null ? e.getMessage() : e.toString());
+            res.put(AppConstants.KEY_SUCCESS, false);
+            res.put(AppConstants.KEY_ERROR, e.getMessage() != null ? e.getMessage() : e.toString());
         }
         return res;
     }
