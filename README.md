@@ -1,6 +1,6 @@
 # ✈️ FlightTracker: Real-Time Flight Price Monitoring System
 
-**FlightTracker** is a premium, full-stack flight monitoring system designed to track flight prices in real-time across an **11-day window** ($\pm 5$ days around your target travel date) for specified Indian domestic routes.
+**FlightTracker** is a modern, full-stack flight monitoring system built with **Spring Boot 3.2 (Java 21)**. It tracks flight prices in real-time across an **11-day window** ($\pm 5$ days around your target travel date) for major Indian domestic routes.
 
 When prices drop below your set budget threshold, the system immediately alerts you via **Email** notifications.
 
@@ -8,10 +8,8 @@ When prices drop below your set budget threshold, the system immediately alerts 
 
 ## 🏗️ Architecture & Technology Stack
 
-The repository contains two setup options:
+The application is 100% self-contained in a single **Java 21 / Spring Boot** project:
 
-### 🍃 Option 1: Spring Boot (Java 21) — *Primary / Recommended Stack*
-Located in the root directory (`/`):
 - **Web Frontend**: HTML5, Vanilla CSS / Tailwind CSS, Chart.js *(100% Mobile Browser Compatible)*
 - **Backend Framework**: Spring Boot 3.2 (Java 21)
 - **Database ORM**: Spring Data JPA / Hibernate (MySQL 8.x)
@@ -19,18 +17,12 @@ Located in the root directory (`/`):
 - **Background Scheduler**: Spring `@Scheduled` worker (runs background scrapes every 12 hours automatically)
 - **Alert Engine**: Spring Mail (`JavaMailSender`)
 
-### 🐘 Option 2: PHP + XAMPP + Python — *Legacy Stack*
-Located in the `flight-tracker/` subdirectory:
-- **Backend API**: PHP 8.x
-- **Web Server**: Apache (XAMPP `htdocs`)
-- **Scraper / Alert Engine**: Python 3 (`requests`, `mysql-connector-python`, `smtplib`)
-
 ---
 
-## ✨ Key Features & Recent Improvements
+## ✨ Key Features
 
 - **📱 Mobile Browser Compatible**: Responsive touch targets, iOS Safari auto-zoom prevention, adaptive layout grids, mobile-friendly modals & filter toolbars.
-- **🚀 Self-Contained Spring Boot Engine**: Direct Java HTTP stream scraping, embedded Tomcat web server, and automated background price checking.
+- **🚀 Self-Contained Spring Boot Engine**: Direct Java HTTP stream scraping, embedded Tomcat web server, and automated background price checking—no external scripts required.
 - **📊 Interactive Cost Trend Analysis**: Line charts displaying price movements across an 11-day window with budget threshold indicator lines.
 - **🔎 Flight Details & Filters**: Sort and filter by price, departure time, airline, direct vs layover flights, and under-budget deals.
 - **🔍 Price Audit & Access Logs**: Pop-up audit log table tracking exact URLs accessed during price discovery, timestamp, operating flight ID, and exact price matches.
@@ -39,7 +31,7 @@ Located in the `flight-tracker/` subdirectory:
 
 ---
 
-## 🚀 Step-by-Step Guide: How to Run the Code (Spring Boot - Recommended)
+## 🚀 Step-by-Step Guide: How to Run the Code
 
 ### Prerequisites (Tools You Need)
 1. **Java JDK 21** or higher:
@@ -105,27 +97,6 @@ mvn spring-boot:run
 ### Step 4: Access the Dashboard
 Open your web browser (desktop or mobile phone) and navigate to:
 👉 **[http://localhost:8080/](http://localhost:8080/)**
-
----
-
-## 🐘 Step-by-Step Guide: Running the PHP + XAMPP Version
-
-If you prefer using the legacy PHP + XAMPP + Python setup:
-
-1. **Copy Files to XAMPP `htdocs`**:
-   Copy the `flight-tracker/` folder to `C:\xampp\htdocs\flight-tracker`.
-2. **Start Apache & MySQL**:
-   Open XAMPP Control Panel and click **Start** next to **Apache** and **MySQL**.
-3. **Import Database**:
-   Go to `http://localhost/phpmyadmin`, select/create `flight_tracker_db`, and import `flight-tracker/database.sql`.
-4. **Set Up Python Scraper**:
-   ```bash
-   cd C:\xampp\htdocs\flight-tracker\scraper
-   pip install -r requirements.txt
-   python tracker.py
-   ```
-5. **Access Application**:
-   Open [http://localhost/flight-tracker/](http://localhost/flight-tracker/) in your browser.
 
 ---
 
